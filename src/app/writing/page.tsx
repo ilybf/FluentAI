@@ -7,10 +7,13 @@ export default function WritingPracticePage() {
   const [text, setText] = useState('');
   const [loading, setLoading] = useState(false);
   const [feedback, setFeedback] = useState<any>(null);
+  const [errorMsg, setErrorMsg] = useState('');
 
   const handleSubmit = async () => {
     if (!text.trim()) return;
     setLoading(true);
+    setErrorMsg('');
+    setFeedback(null);
     
     try {
       const res = await fetch('/api/writing', {
@@ -19,9 +22,15 @@ export default function WritingPracticePage() {
         body: JSON.stringify({ text }),
       });
       const data = await res.json();
+      
+      if (!res.ok) {
+        throw new Error(data.error || 'Failed to submit writing');
+      }
+      
       setFeedback(data);
-    } catch (error) {
+    } catch (error: any) {
       console.error(error);
+      setErrorMsg(error.message || 'An error occurred while evaluating your writing.');
     } finally {
       setLoading(false);
     }
@@ -54,10 +63,17 @@ export default function WritingPracticePage() {
         <Card className="p-6 h-[500px] overflow-y-auto bg-gray-50 border-gray-200">
           <h2 className="text-lg font-medium text-gray-900 mb-4">AI Feedback</h2>
           
-          {!feedback && !loading && (
+          {!feedback && !loading && !errorMsg && (
             <div className="h-full flex flex-col items-center justify-center text-gray-400">
               <span className="text-4xl mb-2">📝</span>
               <p>Submit your writing to see corrections here.</p>
+            </div>
+          )}
+
+          {errorMsg && (
+            <div className="h-full flex flex-col items-center justify-center text-red-500">
+              <span className="text-4xl mb-2">⚠️</span>
+              <p>{errorMsg}</p>
             </div>
           )}
 

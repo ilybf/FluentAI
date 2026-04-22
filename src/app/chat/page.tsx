@@ -6,7 +6,7 @@ import { Input } from '@/components/ui/Input';
 import { useEffect, useRef } from 'react';
 
 export default function ChatTutorPage() {
-  const { messages, input, handleInputChange, handleSubmit, isLoading } = useChat({
+  const { messages, input, handleInputChange, handleSubmit, isLoading, error } = useChat({
     api: '/api/chat',
   });
   
@@ -61,6 +61,13 @@ export default function ChatTutorPage() {
                 <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce"></div>
                 <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
                 <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '0.4s' }}></div>
+              </div>
+            </div>
+          )}
+          {error && (
+            <div className="flex justify-center my-4">
+              <div className="bg-red-50 text-red-600 px-4 py-2 rounded-lg text-sm border border-red-100">
+                ⚠️ {error.message || 'An error occurred while communicating with the AI tutor.'}
               </div>
             </div>
           )}
