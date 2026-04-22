@@ -1,0 +1,34 @@
+# Note: This is a Node.js project. Dependencies are typically managed via package.json.
+# To install all of these dependencies at once, run:
+# npm install mongoose next-auth zod ai @ai-sdk/openai bcryptjs
+# npm install -D @types/bcryptjs
+
+# Core Framework
+next
+react
+react-dom
+
+# Database
+mongoose
+
+# Authentication & Security
+next-auth
+bcryptjs
+
+# AI SDK
+ai
+@ai-sdk/openai
+
+# Schema Validation
+zod
+
+# Dev Dependencies (Types & Styling)
+@types/bcryptjs
+@types/node
+@types/react
+@types/react-dom
+eslint
+eslint-config-next
+tailwindcss
+@tailwindcss/postcss
+typescript
