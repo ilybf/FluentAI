@@ -1,5 +1,4 @@
-import { streamText } from 'ai';
-import { defaultModel } from '@/lib/ai/config';
+import { AIService } from '@/lib/ai/service';
 import { TUTOR_SYSTEM_PROMPT } from '@/lib/ai/tutor';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
@@ -33,23 +32,12 @@ export async function POST(req: NextRequest) {
     });
     await chatSession.save();
 
-    // Generate the stream
-    const result = streamText({
-      model: defaultModel,
-      system: TUTOR_SYSTEM_PROMPT + `\nThe user's native language is ${session.user.nativeLanguage} and their English level is ${session.user.level}.`,
-      messages,
-      async onFinish({ text }) {
-        // Save the AI's response after streaming finishes
-        chatSession.messages.push({
-          role: 'assistant',
-          content: text,
-          timestamp: new Date()
-        });
-        await chatSession.save();
-      }
-    });
-
-    return result.toDataStreamResponse();
+    const systemPrompt = TUTOR_SYSTEM_PROMPT + `\nThe user's native language is ${session.user.nativeLanguage} and their English level is ${session.user.level}.`;
+    
+    // Use the abstraction layer
+    const streamResponse = await AIService.getChatStream(messages, systemPrompt);
+    
+    return streamResponse;
   } catch (error) {
     console.error('Chat API Error:', error);
     return new Response('Internal Server Error', { status: 500 });

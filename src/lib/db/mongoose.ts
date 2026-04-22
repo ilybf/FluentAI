@@ -34,7 +34,18 @@ async function dbConnect(retries = MAX_RETRIES): Promise<typeof mongoose> {
       bufferCommands: false,
       maxPoolSize: 10, // Ensure connection reuse via pooling
       serverSelectionTimeoutMS: 5000,
+      socketTimeoutMS: 45000,
     };
+
+    mongoose.connection.on('error', (err) => {
+      console.error('MongoDB connection error:', err);
+    });
+
+    mongoose.connection.on('disconnected', () => {
+      console.warn('MongoDB disconnected. Clearing cache promise to allow reconnection.');
+      cached.promise = null;
+      cached.conn = null;
+    });
 
     cached.promise = mongoose.connect(MONGODB_URI, opts).then((mongoose) => {
       return mongoose;
@@ -43,6 +54,12 @@ async function dbConnect(retries = MAX_RETRIES): Promise<typeof mongoose> {
 
   try {
     cached.conn = await cached.promise;
+    
+    // Explicit ping to verify DB is actually responsive
+    if (cached.conn.connection.readyState !== 1) {
+      throw new Error("DB connection readyState is not 1 (connected)");
+    }
+    
     return cached.conn;
   } catch (e) {
     cached.promise = null; // reset promise to allow retry
@@ -52,7 +69,7 @@ async function dbConnect(retries = MAX_RETRIES): Promise<typeof mongoose> {
       return dbConnect(retries - 1);
     } else {
       console.error("Failed to connect to the database after multiple attempts.", e);
-      throw e;
+      throw new Error("Database Service Unavailable");
     }
   }
 }

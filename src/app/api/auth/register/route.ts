@@ -2,20 +2,34 @@ import { NextResponse } from 'next/server';
 import bcrypt from 'bcryptjs';
 import dbConnect from '@/lib/db/mongoose';
 import { User } from '@/models/User';
+import { z } from 'zod';
+
+const registerSchema = z.object({
+  email: z.string().email("Invalid email format"),
+  password: z.string().min(6, "Password must be at least 6 characters"),
+  displayName: z.string().min(2, "Name must be at least 2 characters"),
+  nativeLanguage: z.string().optional(),
+  level: z.string().optional()
+});
 
 export async function POST(req: Request) {
   try {
-    const { email, password, displayName, nativeLanguage, level } = await req.json();
-
-    if (!email || !password || !displayName) {
-      return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
+    const body = await req.json();
+    
+    // Validate request body
+    const validationResult = registerSchema.safeParse(body);
+    if (!validationResult.success) {
+      const errorMessage = validationResult.error.errors.map(e => e.message).join(', ');
+      return NextResponse.json({ error: errorMessage }, { status: 400 });
     }
+
+    const { email, password, displayName, nativeLanguage, level } = validationResult.data;
 
     await dbConnect();
 
-    const existingUser = await User.findOne({ email });
+    const existingUser = await User.findOne({ email: email.toLowerCase() });
     if (existingUser) {
-      return NextResponse.json({ error: 'User already exists' }, { status: 400 });
+      return NextResponse.json({ error: 'User with this email already exists' }, { status: 400 });
     }
 
     const passwordHash = await bcrypt.hash(password, 10);

@@ -14,34 +14,39 @@ export const authOptions: NextAuthOptions = {
       },
       async authorize(credentials) {
         if (!credentials?.email || !credentials?.password) {
-          throw new Error("Missing email or password");
+          throw new Error("Missing credentials. Please provide both email and password.");
         }
 
-        await dbConnect();
+        try {
+          await dbConnect();
+          
+          const user = await User.findOne({ email: credentials.email.toLowerCase() }).select("+passwordHash");
 
-        const user = await User.findOne({ email: credentials.email }).select("+passwordHash");
+          if (!user || !user.passwordHash) {
+            throw new Error("Invalid credentials. User not found.");
+          }
 
-        if (!user || !user.passwordHash) {
-          throw new Error("User not found");
+          const isPasswordMatch = await bcrypt.compare(
+            credentials.password,
+            user.passwordHash
+          );
+
+          if (!isPasswordMatch) {
+            throw new Error("Invalid credentials. Incorrect password.");
+          }
+
+          return {
+            id: user._id.toString(),
+            email: user.email,
+            name: user.displayName,
+            level: user.level,
+            nativeLanguage: user.nativeLanguage,
+            totalScore: user.totalScore,
+          };
+        } catch (error: any) {
+          console.error("Auth Authorize Error:", error.message);
+          throw new Error(error.message || "An unexpected authentication error occurred.");
         }
-
-        const isPasswordMatch = await bcrypt.compare(
-          credentials.password,
-          user.passwordHash
-        );
-
-        if (!isPasswordMatch) {
-          throw new Error("Invalid password");
-        }
-
-        return {
-          id: user._id.toString(),
-          email: user.email,
-          name: user.displayName,
-          level: user.level,
-          nativeLanguage: user.nativeLanguage,
-          totalScore: user.totalScore,
-        };
       },
     }),
   ],

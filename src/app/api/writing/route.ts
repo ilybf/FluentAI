@@ -3,7 +3,7 @@ import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import dbConnect from '@/lib/db/mongoose';
 import { WritingSubmission } from '@/models/WritingSubmission';
-import { evaluateWriting } from '@/lib/ai/writing';
+import { AIService } from '@/lib/ai/service';
 import { User } from '@/models/User';
 
 export async function POST(req: NextRequest) {
@@ -18,8 +18,8 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Text is required' }, { status: 400 });
     }
 
-    // Call the AI service
-    const feedback = await evaluateWriting(text);
+    // Call the AI service abstraction
+    const feedback = await AIService.analyzeText(text);
 
     await dbConnect();
     
