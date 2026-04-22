@@ -17,7 +17,7 @@ bcryptjs
 
 # AI SDK
 ai
-@ai-sdk/openai
+@ai-sdk/google
 
 # Schema Validation
 zod
