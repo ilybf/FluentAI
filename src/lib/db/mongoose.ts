@@ -1,4 +1,8 @@
 import mongoose from "mongoose";
+import dns from "node:dns";
+
+// Force Google Public DNS for SRV lookups — local/ISP DNS often blocks or drops SRV queries
+dns.setServers(["8.8.8.8", "8.8.4.4"]);
 
 const MONGODB_URI = process.env.MONGODB_URI!;
 
@@ -34,10 +38,11 @@ async function dbConnect(retries = MAX_RETRIES): Promise<typeof mongoose> {
       bufferCommands: false,
       maxPoolSize: 5,              // Reduced from 10 — sufficient for typical workload, halves idle connection memory
       minPoolSize: 1,              // Keep at least 1 connection warm to avoid cold-start latency
-      serverSelectionTimeoutMS: 5000,
+      serverSelectionTimeoutMS: 10000,
       socketTimeoutMS: 45000,
       maxIdleTimeMS: 30000,        // Close idle connections after 30s to free memory
       autoIndex: process.env.NODE_ENV !== 'production', // Skip auto-indexing in prod (indexes should be created via migration)
+      family: 4,                   // Force IPv4 — fixes SRV ECONNREFUSED on Windows where IPv6 DNS fails
     };
 
     mongoose.connection.on('error', (err) => {

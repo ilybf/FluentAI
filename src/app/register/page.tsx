@@ -46,14 +46,20 @@ export default function RegisterPage() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50 p-4 py-12">
-      <Card className="w-full max-w-md p-8 shadow-xl border-0">
+    <div className="min-h-screen flex items-center justify-center p-4 py-12 relative">
+      {/* Background decorative elements */}
+      <div className="absolute inset-0 overflow-hidden pointer-events-none">
+        <div className="absolute top-1/3 left-1/3 w-96 h-96 bg-indigo-500/10 rounded-full blur-3xl"></div>
+        <div className="absolute bottom-1/3 right-1/3 w-80 h-80 bg-emerald-500/8 rounded-full blur-3xl"></div>
+      </div>
+
+      <Card className="w-full max-w-md p-8 shadow-2xl shadow-black/20 relative z-10 border-[rgba(255,255,255,0.08)]">
         <div className="text-center mb-8">
-          <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-indigo-100 text-indigo-600 mb-4 text-3xl">
+          <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-gradient-to-br from-indigo-500/20 to-violet-500/20 border border-indigo-500/20 mb-4 text-3xl">
             🎓
           </div>
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">Create Account</h1>
-          <p className="text-gray-500">Start mastering English with AI today</p>
+          <h1 className="text-3xl font-bold text-[#f0f2f5] mb-2">Create Account</h1>
+          <p className="text-[#8b92a5]">Start mastering English with AI today</p>
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-4">
@@ -85,9 +91,9 @@ export default function RegisterPage() {
           
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Native Language</label>
+              <label className="block text-sm font-medium text-[#b0b8cc] mb-1.5">Native Language</label>
               <select 
-                className="flex h-10 w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500"
+                className="flex h-11 w-full rounded-xl border border-[rgba(255,255,255,0.1)] bg-[rgba(30,35,55,0.8)] text-[#f0f2f5] px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/50 transition-all duration-200 appearance-none cursor-pointer"
                 value={formData.nativeLanguage}
                 onChange={(e) => setFormData({...formData, nativeLanguage: e.target.value})}
               >
@@ -100,16 +106,16 @@ export default function RegisterPage() {
               </select>
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Current Level</label>
+              <label className="block text-sm font-medium text-[#b0b8cc] mb-1.5">Current Level</label>
               <select 
-                className="flex h-10 w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500"
+                className="flex h-11 w-full rounded-xl border border-[rgba(255,255,255,0.1)] bg-[rgba(30,35,55,0.8)] text-[#f0f2f5] px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/50 transition-all duration-200 appearance-none cursor-pointer"
                 value={formData.level}
                 onChange={(e) => setFormData({...formData, level: e.target.value})}
               >
                 <option value="A1">A1 (Beginner)</option>
                 <option value="A2">A2 (Elementary)</option>
                 <option value="B1">B1 (Intermediate)</option>
-                <option value="B2">B2 (Upper Intermediate)</option>
+                <option value="B2">B2 (Upper Int.)</option>
                 <option value="C1">C1 (Advanced)</option>
                 <option value="C2">C2 (Mastery)</option>
               </select>
@@ -117,7 +123,7 @@ export default function RegisterPage() {
           </div>
           
           {error && (
-            <div className="p-3 bg-red-50 text-red-600 rounded-lg text-sm">
+            <div className="p-3 bg-red-500/10 text-red-400 rounded-xl text-sm border border-red-500/20">
               {error}
             </div>
           )}
@@ -127,9 +133,9 @@ export default function RegisterPage() {
           </Button>
         </form>
 
-        <p className="text-center text-sm text-gray-500 mt-6">
+        <p className="text-center text-sm text-[#5a6178] mt-6">
           Already have an account?{' '}
-          <Link href="/login" className="text-blue-600 hover:underline font-medium">
+          <Link href="/login" className="text-blue-400 hover:text-blue-300 hover:underline font-medium transition-colors">
             Sign in
           </Link>
         </p>

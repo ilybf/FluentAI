@@ -7,19 +7,19 @@ interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
 }
 
 // Static style maps hoisted to module scope — allocated once, shared across all Button instances
-const baseStyles = 'inline-flex items-center justify-center rounded-xl font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none';
+const baseStyles = 'inline-flex items-center justify-center rounded-xl font-semibold transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:ring-offset-2 focus:ring-offset-[#0f1117] disabled:opacity-50 disabled:pointer-events-none';
 
 const variants = {
-  primary: 'bg-blue-600 text-white hover:bg-blue-700 shadow-sm',
-  secondary: 'bg-indigo-100 text-indigo-700 hover:bg-indigo-200',
-  outline: 'border border-gray-300 bg-transparent hover:bg-gray-50 text-gray-700',
-  ghost: 'bg-transparent hover:bg-gray-100 text-gray-700',
+  primary: 'bg-gradient-to-r from-blue-500 to-indigo-500 text-white hover:from-blue-600 hover:to-indigo-600 shadow-lg shadow-blue-500/20 hover:shadow-blue-500/30',
+  secondary: 'bg-[rgba(99,102,241,0.15)] text-indigo-300 hover:bg-[rgba(99,102,241,0.25)] border border-indigo-500/20',
+  outline: 'border border-[rgba(255,255,255,0.12)] bg-transparent hover:bg-[rgba(255,255,255,0.05)] text-[#b0b8cc]',
+  ghost: 'bg-transparent hover:bg-[rgba(255,255,255,0.05)] text-[#b0b8cc]',
 } as const;
 
 const sizes = {
   sm: 'h-8 px-3 text-sm',
-  md: 'h-10 px-4 py-2',
-  lg: 'h-12 px-8 text-lg',
+  md: 'h-10 px-5 py-2 text-sm',
+  lg: 'h-12 px-8 text-base',
 } as const;
 
 export function Button({ 

@@ -18,7 +18,7 @@ export default async function RootLayout({
 
   return (
     <html lang="en">
-      <body className="bg-gray-50 text-gray-900 font-sans antialiased min-h-screen flex">
+      <body className="bg-[#0f1117] text-[#f0f2f5] font-sans antialiased min-h-screen flex">
         <AuthProvider>
           {session && <Sidebar user={session.user} />}
           <main className="flex-1 flex flex-col min-w-0">
