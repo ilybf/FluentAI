@@ -3,16 +3,17 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { signOut } from 'next-auth/react';
 
+// Static data hoisted to module scope — allocated once, never re-created across renders
+const navItems = [
+  { name: 'Dashboard', href: '/dashboard', icon: '📊' },
+  { name: 'Reading', href: '/reading', icon: '📖' },
+  { name: 'Writing', href: '/writing', icon: '✍️' },
+  { name: 'Chat Tutor', href: '/chat', icon: '💬' },
+  { name: 'Vocabulary', href: '/vocabulary', icon: '📚' },
+] as const;
+
 export function Sidebar({ user }: { user: any }) {
   const pathname = usePathname();
-  
-  const navItems = [
-    { name: 'Dashboard', href: '/dashboard', icon: '📊' },
-    { name: 'Reading', href: '/reading', icon: '📖' },
-    { name: 'Writing', href: '/writing', icon: '✍️' },
-    { name: 'Chat Tutor', href: '/chat', icon: '💬' },
-    { name: 'Vocabulary', href: '/vocabulary', icon: '📚' },
-  ];
 
   return (
     <div className="w-64 bg-white border-r border-gray-200 flex flex-col h-screen sticky top-0 hidden md:flex">

@@ -18,6 +18,7 @@ const WritingSubmissionSchema = new Schema<IWritingSubmission>(
       type: Schema.Types.ObjectId,
       ref: "User",
       required: true,
+      index: true, // Index for O(1) lookup by userId
     },
     originalText: { type: String, required: true },
     correctedText: { type: String, required: true },

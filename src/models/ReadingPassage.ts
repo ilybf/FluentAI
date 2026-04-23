@@ -19,7 +19,7 @@ const QuestionSchema = new Schema<IQuestion>({
   text: { type: String, required: true },
   options: { type: [String], required: true },
   correctIndex: { type: Number, required: true },
-});
+}, { _id: false }); // Disable auto _id on subdocuments
 
 const ReadingPassageSchema = new Schema<IReadingPassage>(
   {
@@ -29,6 +29,7 @@ const ReadingPassageSchema = new Schema<IReadingPassage>(
       type: String,
       enum: ["A1", "A2", "B1", "B2", "C1", "C2"],
       required: true,
+      index: true, // Index for efficient level-based queries
     },
     questions: { type: [QuestionSchema], default: [] },
   },

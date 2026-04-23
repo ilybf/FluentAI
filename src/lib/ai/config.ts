@@ -9,6 +9,5 @@ export const google = createGoogleGenerativeAI({
   apiKey: process.env.GOOGLE_GENERATIVE_AI_API_KEY || '',
 });
 
-// We can use Gemini 2.5 Flash for both since it is incredibly fast and highly capable
-export const defaultModel = google('gemini-2.5-flash');
-export const fastModel = google('gemini-2.5-flash');
+// Single model export — avoids duplicate instance allocation
+export const model = google('gemini-2.5-flash');

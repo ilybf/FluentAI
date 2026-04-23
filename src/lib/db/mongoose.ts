@@ -32,9 +32,12 @@ async function dbConnect(retries = MAX_RETRIES): Promise<typeof mongoose> {
   if (!cached.promise) {
     const opts = {
       bufferCommands: false,
-      maxPoolSize: 10, // Ensure connection reuse via pooling
+      maxPoolSize: 5,              // Reduced from 10 — sufficient for typical workload, halves idle connection memory
+      minPoolSize: 1,              // Keep at least 1 connection warm to avoid cold-start latency
       serverSelectionTimeoutMS: 5000,
       socketTimeoutMS: 45000,
+      maxIdleTimeMS: 30000,        // Close idle connections after 30s to free memory
+      autoIndex: process.env.NODE_ENV !== 'production', // Skip auto-indexing in prod (indexes should be created via migration)
     };
 
     mongoose.connection.on('error', (err) => {

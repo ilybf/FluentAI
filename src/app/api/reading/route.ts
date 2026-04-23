@@ -15,7 +15,8 @@ export async function GET(req: NextRequest) {
     const level = searchParams.get('level') || session.user.level;
 
     await dbConnect();
-    const passages = await ReadingPassage.find({ level }).sort({ createdAt: -1 });
+    // .lean() returns plain JS objects instead of Mongoose documents — ~5x less memory per doc
+    const passages = await ReadingPassage.find({ level }).sort({ createdAt: -1 }).lean();
 
     return NextResponse.json(passages);
   } catch (error) {

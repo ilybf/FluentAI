@@ -6,6 +6,11 @@ import dbConnect from '@/lib/db/mongoose';
 import { ChatSession } from '@/models/ChatSession';
 import { NextRequest } from 'next/server';
 
+// Cap the number of messages sent to the AI to avoid unbounded token/memory usage
+const MAX_AI_CONTEXT_MESSAGES = 30;
+// Cap total stored messages per session to bound DB document size
+const MAX_STORED_MESSAGES = 200;
+
 export async function POST(req: NextRequest) {
   try {
     const session = await getServerSession(authOptions);
@@ -17,25 +22,27 @@ export async function POST(req: NextRequest) {
 
     await dbConnect();
     
-    // Find or create chat session
-    let chatSession = await ChatSession.findOne({ userId: session.user.id });
-    if (!chatSession) {
-      chatSession = new ChatSession({ userId: session.user.id, messages: [] });
-    }
-
-    // Save the user's latest message
+    // Use atomic $push with $slice to cap stored messages — avoids loading entire doc into memory
     const lastMessage = messages[messages.length - 1];
-    chatSession.messages.push({
-      role: 'user',
-      content: lastMessage.content,
-      timestamp: new Date()
-    });
-    await chatSession.save();
+    await ChatSession.findOneAndUpdate(
+      { userId: session.user.id },
+      {
+        $push: {
+          messages: {
+            $each: [{ role: 'user', content: lastMessage.content, timestamp: new Date() }],
+            $slice: -MAX_STORED_MESSAGES, // Keep only the latest N messages
+          },
+        },
+        $set: { lastActive: new Date() },
+      },
+      { upsert: true } // Create session if it doesn't exist
+    );
 
     const systemPrompt = TUTOR_SYSTEM_PROMPT + `\nThe user's native language is ${session.user.nativeLanguage} and their English level is ${session.user.level}.`;
     
-    // Use the abstraction layer
-    const streamResponse = await AIService.getChatStream(messages, systemPrompt);
+    // Send only the most recent messages to the AI to limit token usage
+    const trimmedMessages = messages.slice(-MAX_AI_CONTEXT_MESSAGES);
+    const streamResponse = await AIService.getChatStream(trimmedMessages, systemPrompt);
     
     return streamResponse;
   } catch (error) {

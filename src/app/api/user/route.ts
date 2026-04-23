@@ -12,7 +12,8 @@ export async function GET() {
     }
 
     await dbConnect();
-    const user = await User.findById(session.user.id).select('-passwordHash');
+    // .lean() returns a plain JS object — avoids Mongoose document overhead
+    const user = await User.findById(session.user.id).select('-passwordHash').lean();
     
     if (!user) {
       return NextResponse.json({ error: 'User not found' }, { status: 404 });
@@ -38,7 +39,7 @@ export async function PUT(req: NextRequest) {
       session.user.id,
       { displayName, nativeLanguage },
       { new: true }
-    ).select('-passwordHash');
+    ).select('-passwordHash').lean();
 
     return NextResponse.json(updatedUser);
   } catch (error) {

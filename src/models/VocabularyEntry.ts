@@ -14,6 +14,7 @@ const VocabularyEntrySchema = new Schema<IVocabularyEntry>(
       type: Schema.Types.ObjectId,
       ref: "User",
       required: true,
+      index: true, // Index for O(1) lookup by userId
     },
     word: { type: String, required: true, trim: true },
     contextSentence: { type: String, required: true },

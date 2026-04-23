@@ -16,7 +16,7 @@ const ChatMessageSchema = new Schema<IChatMessage>({
   role: { type: String, enum: ["user", "assistant", "system"], required: true },
   content: { type: String, required: true },
   timestamp: { type: Date, default: Date.now },
-});
+}, { _id: false }); // Disable auto _id on subdocuments — saves ~12 bytes per message
 
 const ChatSessionSchema = new Schema<IChatSession>(
   {
@@ -24,6 +24,7 @@ const ChatSessionSchema = new Schema<IChatSession>(
       type: Schema.Types.ObjectId,
       ref: "User",
       required: true,
+      index: true, // Index for O(1) lookup by userId instead of collection scan
     },
     messages: { type: [ChatMessageSchema], default: [] },
     lastActive: { type: Date, default: Date.now },
