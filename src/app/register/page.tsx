@@ -45,21 +45,27 @@ export default function RegisterPage() {
     }
   };
 
+  const selectStyle: React.CSSProperties = {
+    background: 'var(--bg-input)',
+    border: '1px solid var(--border-input)',
+    color: 'var(--text-primary)',
+  };
+
   return (
     <div className="min-h-screen flex items-center justify-center p-4 py-12 relative">
       {/* Background decorative elements */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute top-1/3 left-1/3 w-96 h-96 bg-indigo-500/10 rounded-full blur-3xl"></div>
-        <div className="absolute bottom-1/3 right-1/3 w-80 h-80 bg-emerald-500/8 rounded-full blur-3xl"></div>
+        <div className="absolute top-1/3 left-1/3 w-72 sm:w-96 h-72 sm:h-96 rounded-full blur-3xl" style={{ background: 'rgba(99,102,241,0.1)' }}></div>
+        <div className="absolute bottom-1/3 right-1/3 w-64 sm:w-80 h-64 sm:h-80 rounded-full blur-3xl" style={{ background: 'rgba(16,185,129,0.08)' }}></div>
       </div>
 
-      <Card className="w-full max-w-md p-8 shadow-2xl shadow-black/20 relative z-10 border-[rgba(255,255,255,0.08)]">
-        <div className="text-center mb-8">
-          <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-gradient-to-br from-indigo-500/20 to-violet-500/20 border border-indigo-500/20 mb-4 text-3xl">
+      <Card className="w-full max-w-md p-6 sm:p-8 shadow-2xl relative z-10">
+        <div className="text-center mb-6 sm:mb-8">
+          <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl mb-4 text-3xl" style={{ background: 'linear-gradient(to bottom right, rgba(99,102,241,0.2), rgba(139,92,246,0.2))', border: '1px solid rgba(99,102,241,0.2)' }}>
             🎓
           </div>
-          <h1 className="text-3xl font-bold text-[#f0f2f5] mb-2">Create Account</h1>
-          <p className="text-[#8b92a5]">Start mastering English with AI today</p>
+          <h1 className="text-2xl sm:text-3xl font-bold mb-2" style={{ color: 'var(--text-primary)' }}>Create Account</h1>
+          <p style={{ color: 'var(--text-secondary)' }}>Start mastering English with AI today</p>
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-4">
@@ -89,11 +95,12 @@ export default function RegisterPage() {
             minLength={6}
           />
           
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm font-medium text-[#b0b8cc] mb-1.5">Native Language</label>
+              <label className="block text-sm font-medium mb-1.5" style={{ color: 'var(--text-secondary)' }}>Native Language</label>
               <select 
-                className="flex h-11 w-full rounded-xl border border-[rgba(255,255,255,0.1)] bg-[rgba(30,35,55,0.8)] text-[#f0f2f5] px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/50 transition-all duration-200 appearance-none cursor-pointer"
+                className="flex h-11 w-full rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/50 transition-all duration-200 appearance-none cursor-pointer theme-transition"
+                style={selectStyle}
                 value={formData.nativeLanguage}
                 onChange={(e) => setFormData({...formData, nativeLanguage: e.target.value})}
               >
@@ -106,9 +113,10 @@ export default function RegisterPage() {
               </select>
             </div>
             <div>
-              <label className="block text-sm font-medium text-[#b0b8cc] mb-1.5">Current Level</label>
+              <label className="block text-sm font-medium mb-1.5" style={{ color: 'var(--text-secondary)' }}>Current Level</label>
               <select 
-                className="flex h-11 w-full rounded-xl border border-[rgba(255,255,255,0.1)] bg-[rgba(30,35,55,0.8)] text-[#f0f2f5] px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/50 transition-all duration-200 appearance-none cursor-pointer"
+                className="flex h-11 w-full rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/50 transition-all duration-200 appearance-none cursor-pointer theme-transition"
+                style={selectStyle}
                 value={formData.level}
                 onChange={(e) => setFormData({...formData, level: e.target.value})}
               >
@@ -123,7 +131,7 @@ export default function RegisterPage() {
           </div>
           
           {error && (
-            <div className="p-3 bg-red-500/10 text-red-400 rounded-xl text-sm border border-red-500/20">
+            <div className="p-3 rounded-xl text-sm" style={{ background: 'rgba(239,68,68,0.1)', color: '#f87171', border: '1px solid rgba(239,68,68,0.2)' }}>
               {error}
             </div>
           )}
@@ -133,9 +141,9 @@ export default function RegisterPage() {
           </Button>
         </form>
 
-        <p className="text-center text-sm text-[#5a6178] mt-6">
+        <p className="text-center text-sm mt-6" style={{ color: 'var(--text-muted)' }}>
           Already have an account?{' '}
-          <Link href="/login" className="text-blue-400 hover:text-blue-300 hover:underline font-medium transition-colors">
+          <Link href="/login" className="font-medium transition-colors hover:underline" style={{ color: 'var(--accent-blue)' }}>
             Sign in
           </Link>
         </p>

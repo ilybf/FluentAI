@@ -45,8 +45,14 @@ export async function POST(req: NextRequest) {
     const streamResponse = await AIService.getChatStream(trimmedMessages, systemPrompt);
     
     return streamResponse;
-  } catch (error) {
+  } catch (error: any) {
     console.error('Chat API Error:', error);
+    if (error?.message === 'RATE_LIMITED') {
+      return new Response(JSON.stringify({ error: 'You are sending messages too fast. Please wait a moment and try again.' }), {
+        status: 429,
+        headers: { 'Content-Type': 'application/json' },
+      });
+    }
     return new Response('Internal Server Error', { status: 500 });
   }
 }

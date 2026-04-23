@@ -10,4 +10,4 @@ export const google = createGoogleGenerativeAI({
 });
 
 // Single model export — avoids duplicate instance allocation
-export const model = google('gemini-2.5-flash');
+export const model = google('gemini-2.0-flash');

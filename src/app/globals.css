@@ -1,6 +1,7 @@
 @import "tailwindcss";
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
 
+/* ===== DARK THEME (default) ===== */
 :root {
   --bg-primary: #0f1117;
   --bg-secondary: #161922;
@@ -21,6 +22,39 @@
   --gradient-end: #8b5cf6;
   --glass-bg: rgba(22, 27, 45, 0.6);
   --glass-border: rgba(255, 255, 255, 0.08);
+  --sidebar-bg: rgba(22, 25, 34, 0.8);
+  --scrollbar-thumb: rgba(255, 255, 255, 0.1);
+  --scrollbar-thumb-hover: rgba(255, 255, 255, 0.2);
+  --selection-bg: rgba(59, 130, 246, 0.3);
+  --shadow-color: rgba(0, 0, 0, 0.3);
+}
+
+/* ===== LIGHT THEME ===== */
+[data-theme="light"] {
+  --bg-primary: #f4f6fb;
+  --bg-secondary: #ffffff;
+  --bg-card: rgba(255, 255, 255, 0.85);
+  --bg-card-solid: #ffffff;
+  --bg-input: rgba(241, 243, 249, 0.9);
+  --border-subtle: rgba(0, 0, 0, 0.07);
+  --border-input: rgba(0, 0, 0, 0.12);
+  --text-primary: #1a1d2e;
+  --text-secondary: #5a6178;
+  --text-muted: #8b92a5;
+  --accent-blue: #2563eb;
+  --accent-blue-hover: #1d4ed8;
+  --accent-indigo: #4f46e5;
+  --accent-violet: #7c3aed;
+  --accent-emerald: #059669;
+  --gradient-start: #2563eb;
+  --gradient-end: #7c3aed;
+  --glass-bg: rgba(255, 255, 255, 0.7);
+  --glass-border: rgba(0, 0, 0, 0.06);
+  --sidebar-bg: rgba(255, 255, 255, 0.92);
+  --scrollbar-thumb: rgba(0, 0, 0, 0.12);
+  --scrollbar-thumb-hover: rgba(0, 0, 0, 0.22);
+  --selection-bg: rgba(37, 99, 235, 0.2);
+  --shadow-color: rgba(0, 0, 0, 0.08);
 }
 
 @theme inline {
@@ -40,9 +74,10 @@ body {
   font-family: 'Inter', system-ui, -apple-system, sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  transition: background-color 0.3s ease, color 0.3s ease;
 }
 
-/* Ambient background glow */
+/* Ambient background glow — dark mode only */
 body::before {
   content: '';
   position: fixed;
@@ -56,11 +91,26 @@ body::before {
     radial-gradient(ellipse at 50% 80%, rgba(16, 185, 129, 0.04) 0%, transparent 50%);
   pointer-events: none;
   z-index: 0;
+  transition: opacity 0.3s ease;
 }
 
-#__next, main, body > div {
+[data-theme="light"] body::before {
+  background: 
+    radial-gradient(ellipse at 20% 50%, rgba(59, 130, 246, 0.04) 0%, transparent 50%),
+    radial-gradient(ellipse at 80% 20%, rgba(139, 92, 246, 0.03) 0%, transparent 50%),
+    radial-gradient(ellipse at 50% 80%, rgba(16, 185, 129, 0.02) 0%, transparent 50%);
+}
+
+/* Ensure content stays above ambient glow */
+#__next, main {
   position: relative;
   z-index: 1;
+}
+
+/* Ensure html/body stretch full height for flex sidebar */
+html, body {
+  height: 100%;
+  margin: 0;
 }
 
 /* Scrollbar styling */
@@ -74,18 +124,18 @@ body::before {
 }
 
 ::-webkit-scrollbar-thumb {
-  background: rgba(255, 255, 255, 0.1);
+  background: var(--scrollbar-thumb);
   border-radius: 3px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: rgba(255, 255, 255, 0.2);
+  background: var(--scrollbar-thumb-hover);
 }
 
 /* Selection styling */
 ::selection {
-  background: rgba(59, 130, 246, 0.3);
-  color: #f0f2f5;
+  background: var(--selection-bg);
+  color: var(--text-primary);
 }
 
 /* Global link transitions */
@@ -97,4 +147,48 @@ a {
 :focus-visible {
   outline: 2px solid var(--accent-blue);
   outline-offset: 2px;
+}
+
+/* ===== MOBILE RESPONSIVE UTILITIES ===== */
+
+/* Mobile overlay backdrop */
+.sidebar-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(4px);
+  z-index: 40;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.3s ease;
+}
+
+.sidebar-backdrop.active {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+/* Mobile sidebar slide-in */
+.sidebar-mobile {
+  transform: translateX(-100%);
+  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.sidebar-mobile.open {
+  transform: translateX(0);
+}
+
+/* Theme toggle button animation */
+.theme-toggle {
+  position: relative;
+  overflow: hidden;
+}
+
+.theme-toggle svg {
+  transition: transform 0.3s ease, opacity 0.3s ease;
+}
+
+/* Smooth card transitions for theme switch */
+.theme-transition {
+  transition: background-color 0.3s ease, border-color 0.3s ease, color 0.3s ease, box-shadow 0.3s ease;
 }

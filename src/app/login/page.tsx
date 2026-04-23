@@ -37,17 +37,17 @@ export default function LoginPage() {
     <div className="min-h-screen flex items-center justify-center p-4 relative">
       {/* Background decorative elements */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-blue-500/10 rounded-full blur-3xl"></div>
-        <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-violet-500/10 rounded-full blur-3xl"></div>
+        <div className="absolute top-1/4 left-1/4 w-72 sm:w-96 h-72 sm:h-96 rounded-full blur-3xl" style={{ background: 'rgba(59,130,246,0.1)' }}></div>
+        <div className="absolute bottom-1/4 right-1/4 w-72 sm:w-96 h-72 sm:h-96 rounded-full blur-3xl" style={{ background: 'rgba(139,92,246,0.1)' }}></div>
       </div>
 
-      <Card className="w-full max-w-md p-8 shadow-2xl shadow-black/20 relative z-10 border-[rgba(255,255,255,0.08)]">
-        <div className="text-center mb-8">
-          <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-gradient-to-br from-blue-500/20 to-indigo-500/20 border border-blue-500/20 mb-4 text-3xl">
+      <Card className="w-full max-w-md p-6 sm:p-8 shadow-2xl relative z-10">
+        <div className="text-center mb-6 sm:mb-8">
+          <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl mb-4 text-3xl" style={{ background: 'linear-gradient(to bottom right, rgba(59,130,246,0.2), rgba(99,102,241,0.2))', border: '1px solid rgba(59,130,246,0.2)' }}>
             🚀
           </div>
-          <h1 className="text-3xl font-bold text-[#f0f2f5] mb-2">Welcome Back</h1>
-          <p className="text-[#8b92a5]">Sign in to continue your English journey</p>
+          <h1 className="text-2xl sm:text-3xl font-bold mb-2" style={{ color: 'var(--text-primary)' }}>Welcome Back</h1>
+          <p style={{ color: 'var(--text-secondary)' }}>Sign in to continue your English journey</p>
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-5">
@@ -69,7 +69,7 @@ export default function LoginPage() {
           />
           
           {error && (
-            <div className="p-3 bg-red-500/10 text-red-400 rounded-xl text-sm border border-red-500/20">
+            <div className="p-3 rounded-xl text-sm" style={{ background: 'rgba(239,68,68,0.1)', color: '#f87171', border: '1px solid rgba(239,68,68,0.2)' }}>
               {error}
             </div>
           )}
@@ -79,9 +79,9 @@ export default function LoginPage() {
           </Button>
         </form>
 
-        <p className="text-center text-sm text-[#5a6178] mt-6">
-          Don't have an account?{' '}
-          <a href="/register" className="text-blue-400 hover:text-blue-300 hover:underline font-medium transition-colors">
+        <p className="text-center text-sm mt-6" style={{ color: 'var(--text-muted)' }}>
+          Don&apos;t have an account?{' '}
+          <a href="/register" className="font-medium transition-colors hover:underline" style={{ color: 'var(--accent-blue)' }}>
             Sign up
           </a>
         </p>

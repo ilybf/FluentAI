@@ -18,15 +18,33 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Text is required' }, { status: 400 });
     }
 
+    // Sanitize input length to prevent abuse
+    const sanitizedText = text.trim().slice(0, 5000);
+
     // Call the AI service abstraction
-    const feedback = await AIService.analyzeText(text);
+    let feedback;
+    try {
+      feedback = await AIService.analyzeText(sanitizedText);
+    } catch (aiError: any) {
+      console.error('AI Analysis failed:', aiError);
+      if (aiError?.message === 'RATE_LIMITED') {
+        return NextResponse.json(
+          { error: 'Too many requests. Please wait about a minute before trying again.' },
+          { status: 429 }
+        );
+      }
+      return NextResponse.json(
+        { error: 'AI service is temporarily unavailable. Please try again in a moment.' },
+        { status: 503 }
+      );
+    }
 
     await dbConnect();
     
     // Save submission
     const submission = new WritingSubmission({
       userId: session.user.id,
-      originalText: text,
+      originalText: sanitizedText,
       correctedText: feedback.correctedText,
       score: feedback.score,
       feedback: {
@@ -42,7 +60,14 @@ export async function POST(req: NextRequest) {
       $inc: { totalScore: feedback.score }
     });
 
-    return NextResponse.json(submission);
+    return NextResponse.json({
+      score: feedback.score,
+      correctedText: feedback.correctedText,
+      feedback: {
+        grammar: feedback.grammar,
+        style: feedback.style,
+      },
+    });
   } catch (error) {
     console.error('Writing API Error:', error);
     return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });

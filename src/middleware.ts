@@ -5,8 +5,11 @@ export const config = {
     "/dashboard/:path*",
     "/chat/:path*",
     "/writing/:path*",
+    "/reading/:path*",
+    "/vocabulary/:path*",
     "/api/chat/:path*",
     "/api/writing/:path*",
     "/api/reading/:path*",
+    "/api/vocabulary/:path*",
   ],
 };

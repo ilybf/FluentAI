@@ -18,19 +18,19 @@ export default function ChatTutorPage() {
 
   return (
     <div className="max-w-4xl mx-auto h-[calc(100vh-6rem)] flex flex-col">
-      <div className="mb-6">
-        <h1 className="text-3xl font-bold text-[#f0f2f5]">AI English Tutor</h1>
-        <p className="text-[#8b92a5]">Practice your English conversation skills with real-time corrections.</p>
+      <div className="mb-4 sm:mb-6">
+        <h1 className="text-2xl sm:text-3xl font-bold" style={{ color: 'var(--text-primary)' }}>AI English Tutor</h1>
+        <p style={{ color: 'var(--text-secondary)' }} className="text-sm sm:text-base">Practice your English conversation skills with real-time corrections.</p>
       </div>
 
-      <Card className="flex-1 flex flex-col overflow-hidden shadow-xl shadow-black/10 border-[rgba(255,255,255,0.06)]">
-        <div className="flex-1 overflow-y-auto p-6 space-y-6">
+      <Card className="flex-1 flex flex-col overflow-hidden shadow-xl">
+        <div className="flex-1 overflow-y-auto p-4 sm:p-6 space-y-4 sm:space-y-6">
           {messages.length === 0 && (
-            <div className="flex flex-col items-center justify-center h-full text-center space-y-4">
-              <div className="text-6xl inline-flex items-center justify-center w-20 h-20 rounded-2xl bg-blue-500/10">👋</div>
+            <div className="flex flex-col items-center justify-center h-full text-center space-y-4 px-4">
+              <div className="text-5xl sm:text-6xl inline-flex items-center justify-center w-16 sm:w-20 h-16 sm:h-20 rounded-2xl" style={{ background: 'rgba(59,130,246,0.1)' }}>👋</div>
               <div>
-                <h3 className="text-xl font-medium text-[#f0f2f5]">Start a conversation!</h3>
-                <p className="text-[#8b92a5] max-w-sm mx-auto mt-2">
+                <h3 className="text-lg sm:text-xl font-medium" style={{ color: 'var(--text-primary)' }}>Start a conversation!</h3>
+                <p className="max-w-sm mx-auto mt-2 text-sm sm:text-base" style={{ color: 'var(--text-secondary)' }}>
                   Try asking: &ldquo;Can we practice ordering food in a restaurant?&rdquo; or &ldquo;Can you explain the past perfect tense?&rdquo;
                 </p>
               </div>
@@ -43,13 +43,22 @@ export default function ChatTutorPage() {
               className={`flex ${m.role === 'user' ? 'justify-end' : 'justify-start'}`}
             >
               <div
-                className={`max-w-[80%] rounded-2xl px-5 py-3 ${
+                className={`max-w-[85%] sm:max-w-[80%] rounded-2xl px-4 sm:px-5 py-3 text-sm sm:text-base ${
                   m.role === 'user'
-                    ? 'bg-gradient-to-r from-blue-500 to-indigo-500 text-white rounded-br-none shadow-lg shadow-blue-500/15'
-                    : 'bg-[rgba(255,255,255,0.05)] text-[#e0e4ed] rounded-bl-none border border-[rgba(255,255,255,0.06)]'
+                    ? 'rounded-br-none shadow-lg'
+                    : 'rounded-bl-none'
                 }`}
+                style={m.role === 'user' ? {
+                  background: `linear-gradient(to right, var(--accent-blue), var(--accent-indigo))`,
+                  color: '#ffffff',
+                  boxShadow: '0 4px 14px rgba(59,130,246,0.15)',
+                } : {
+                  background: 'var(--glass-bg)',
+                  color: 'var(--text-primary)',
+                  border: '1px solid var(--border-subtle)',
+                }}
               >
-                <div className="prose prose-sm max-w-none prose-invert">
+                <div className="prose prose-sm max-w-none">
                   {m.content}
                 </div>
               </div>
@@ -57,7 +66,7 @@ export default function ChatTutorPage() {
           ))}
           {isLoading && (
             <div className="flex justify-start">
-              <div className="bg-[rgba(255,255,255,0.05)] text-[#e0e4ed] rounded-2xl rounded-bl-none px-5 py-3 flex space-x-2 border border-[rgba(255,255,255,0.06)]">
+              <div className="rounded-2xl rounded-bl-none px-5 py-3 flex space-x-2" style={{ background: 'var(--glass-bg)', border: '1px solid var(--border-subtle)' }}>
                 <div className="w-2 h-2 bg-blue-400 rounded-full animate-bounce"></div>
                 <div className="w-2 h-2 bg-indigo-400 rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
                 <div className="w-2 h-2 bg-violet-400 rounded-full animate-bounce" style={{ animationDelay: '0.4s' }}></div>
@@ -66,7 +75,7 @@ export default function ChatTutorPage() {
           )}
           {error && (
             <div className="flex justify-center my-4">
-              <div className="bg-red-500/10 text-red-400 px-4 py-2 rounded-xl text-sm border border-red-500/20">
+              <div className="px-4 py-2 rounded-xl text-sm" style={{ background: 'rgba(239,68,68,0.1)', color: '#f87171', border: '1px solid rgba(239,68,68,0.2)' }}>
                 ⚠️ {error.message || 'An error occurred while communicating with the AI tutor.'}
               </div>
             </div>
@@ -74,8 +83,8 @@ export default function ChatTutorPage() {
           <div ref={messagesEndRef} />
         </div>
 
-        <div className="p-4 bg-[rgba(22,27,45,0.5)] border-t border-[rgba(255,255,255,0.06)]">
-          <form onSubmit={handleSubmit} className="flex gap-4">
+        <div className="p-3 sm:p-4" style={{ background: 'var(--glass-bg)', borderTop: '1px solid var(--border-subtle)' }}>
+          <form onSubmit={handleSubmit} className="flex gap-3 sm:gap-4">
             <Input
               value={input}
               onChange={handleInputChange}

@@ -1,8 +1,15 @@
 import React from 'react';
 
-export function Card({ children, className = '' }: { children: React.ReactNode, className?: string }) {
+export function Card({ children, className = '', style = {} }: { children: React.ReactNode, className?: string, style?: React.CSSProperties }) {
   return (
-    <div className={`bg-[rgba(22,27,45,0.7)] backdrop-blur-xl rounded-2xl border border-[rgba(255,255,255,0.06)] overflow-hidden ${className}`}>
+    <div
+      className={`backdrop-blur-xl rounded-2xl overflow-hidden theme-transition ${className}`}
+      style={{
+        background: 'var(--bg-card)',
+        border: '1px solid var(--border-subtle)',
+        ...style,
+      }}
+    >
       {children}
     </div>
   );

@@ -7,20 +7,43 @@ interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
 }
 
 // Static style maps hoisted to module scope — allocated once, shared across all Button instances
-const baseStyles = 'inline-flex items-center justify-center rounded-xl font-semibold transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:ring-offset-2 focus:ring-offset-[#0f1117] disabled:opacity-50 disabled:pointer-events-none';
-
-const variants = {
-  primary: 'bg-gradient-to-r from-blue-500 to-indigo-500 text-white hover:from-blue-600 hover:to-indigo-600 shadow-lg shadow-blue-500/20 hover:shadow-blue-500/30',
-  secondary: 'bg-[rgba(99,102,241,0.15)] text-indigo-300 hover:bg-[rgba(99,102,241,0.25)] border border-indigo-500/20',
-  outline: 'border border-[rgba(255,255,255,0.12)] bg-transparent hover:bg-[rgba(255,255,255,0.05)] text-[#b0b8cc]',
-  ghost: 'bg-transparent hover:bg-[rgba(255,255,255,0.05)] text-[#b0b8cc]',
-} as const;
+const baseStyles = 'inline-flex items-center justify-center rounded-xl font-semibold transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none theme-transition';
 
 const sizes = {
   sm: 'h-8 px-3 text-sm',
   md: 'h-10 px-5 py-2 text-sm',
   lg: 'h-12 px-8 text-base',
 } as const;
+
+function getVariantStyle(variant: string): React.CSSProperties {
+  switch (variant) {
+    case 'primary':
+      return {
+        background: `linear-gradient(to right, var(--accent-blue), var(--accent-indigo))`,
+        color: '#ffffff',
+        boxShadow: '0 4px 14px rgba(59,130,246,0.2)',
+      };
+    case 'secondary':
+      return {
+        background: 'rgba(99,102,241,0.15)',
+        color: 'var(--accent-indigo)',
+        border: '1px solid rgba(99,102,241,0.2)',
+      };
+    case 'outline':
+      return {
+        background: 'transparent',
+        color: 'var(--text-secondary)',
+        border: '1px solid var(--border-input)',
+      };
+    case 'ghost':
+      return {
+        background: 'transparent',
+        color: 'var(--text-secondary)',
+      };
+    default:
+      return {};
+  }
+}
 
 export function Button({ 
   children, 
@@ -29,11 +52,17 @@ export function Button({
   isLoading, 
   className = '',
   disabled,
+  style = {},
   ...props 
 }: ButtonProps) {
   return (
     <button 
-      className={`${baseStyles} ${variants[variant]} ${sizes[size]} ${className}`}
+      className={`${baseStyles} ${sizes[size]} ${className}`}
+      style={{
+        ...getVariantStyle(variant),
+        focusRingColor: 'var(--accent-blue)',
+        ...style,
+      } as React.CSSProperties}
       disabled={disabled || isLoading}
       {...props}
     >
