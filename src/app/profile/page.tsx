@@ -20,7 +20,7 @@ export default async function ProfilePage() {
   }
 
   return (
-    <div className="max-w-4xl mx-auto min-h-[calc(100vh-6rem)] flex flex-col p-4 sm:p-6 lg:p-8">
+    <div className="max-w-4xl mx-auto min-h-[calc(100dvh-6rem)] flex flex-col p-4 sm:p-6 lg:p-8">
       <div className="mb-6 sm:mb-8">
         <h1 className="text-3xl sm:text-4xl font-bold" style={{ color: 'var(--text-primary)' }}>My Profile</h1>
         <p style={{ color: 'var(--text-secondary)' }} className="text-base sm:text-lg mt-1">Manage your account and view your progress.</p>
