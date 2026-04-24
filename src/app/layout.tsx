@@ -28,14 +28,11 @@ export default async function RootLayout({
         `}} />
       </head>
       <body
-        className="font-sans antialiased"
+        className="font-sans antialiased flex flex-col md:flex-row min-h-screen"
         style={{
           background: 'var(--bg-primary)',
           color: 'var(--text-primary)',
           margin: 0,
-          height: '100%',
-          display: 'flex',
-          flexDirection: 'row',
         }}
       >
         <a href="#main-content" className="skip-to-content">
@@ -44,7 +41,11 @@ export default async function RootLayout({
         <AuthProvider>
           <ThemeProvider>
             {session && <Sidebar user={session.user} />}
-            <main id="main-content" style={{ flex: 1, display: 'flex', flexDirection: 'column', minWidth: 0, minHeight: '100vh' }}>
+            <main 
+              id="main-content" 
+              className="flex-1 flex flex-col min-w-0 pt-16 md:pt-0"
+              style={{ minHeight: '100vh' }}
+            >
               <div className="flex-1 p-4 md:p-8 overflow-auto page-animate">
                 {children}
               </div>
