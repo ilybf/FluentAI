@@ -28,7 +28,7 @@ export default async function RootLayout({
         `}} />
       </head>
       <body
-        className="font-sans antialiased flex flex-col md:flex-row min-h-screen overflow-hidden"
+        className="font-sans antialiased flex flex-col md:flex-row min-h-[100dvh] overflow-hidden"
         style={{
           background: 'var(--bg-primary)',
           color: 'var(--text-primary)',
@@ -44,12 +44,12 @@ export default async function RootLayout({
             <main 
               id="main-content" 
               className="flex-1 flex flex-col min-w-0"
-              style={{ minHeight: '100vh' }}
+              style={{ minHeight: '100dvh' }}
             >
-              <div className="flex-1 overflow-auto page-animate">
+              <div className="flex-1 overflow-auto page-animate flex flex-col">
                 {/* Mobile spacer: pushes content below the fixed header, but scrolls with the content */}
                 <div className="md:hidden shrink-0 w-full" style={{ height: '72px' }} />
-                <div className="p-4 md:p-8">
+                <div className="p-4 md:p-8 flex-1 flex flex-col">
                   {children}
                 </div>
               </div>

@@ -113,7 +113,7 @@ export default function ChatTutorPage() {
   }, [messages, loadingMessages]);
 
   return (
-    <div className="max-w-6xl mx-auto h-[calc(100dvh-6.5rem)] md:h-[calc(100vh-6rem)] flex flex-col md:flex-row gap-4 sm:gap-6 relative">
+    <div className="max-w-6xl mx-auto w-full flex-1 flex flex-col md:flex-row gap-4 sm:gap-6 relative min-h-0">
       
       {/* Mobile Sidebar Toggle */}
       <div className="md:hidden flex items-center justify-between mb-2">
@@ -133,7 +133,7 @@ export default function ChatTutorPage() {
       )}
 
       {/* Left Sidebar - Chat History */}
-      <Card className={`${sidebarOpen ? 'flex' : 'hidden'} md:flex flex-col w-full md:w-72 shrink-0 shadow-lg absolute md:relative z-20 h-[calc(100dvh-10.5rem)] md:h-full`}>
+      <Card className={`${sidebarOpen ? 'flex' : 'hidden'} md:flex flex-col w-full md:w-72 shrink-0 shadow-lg absolute md:relative z-20 h-full`}>
         <div className="p-4 border-b" style={{ borderColor: 'var(--border-subtle)' }}>
           <Button onClick={startNewChat} className="w-full flex items-center justify-center gap-2">
             <span>+</span> New Conversation
@@ -177,7 +177,7 @@ export default function ChatTutorPage() {
       </Card>
 
       {/* Right Area - Chat Window */}
-      <Card className="flex-1 flex flex-col overflow-hidden shadow-xl relative z-10 h-full">
+      <Card className="flex-1 flex flex-col overflow-hidden shadow-xl relative z-10 h-full min-h-0">
         <div className="flex-1 overflow-y-auto p-4 sm:p-6 space-y-4 sm:space-y-6">
           {loadingMessages && (
              <div className="flex justify-center items-center h-full">
