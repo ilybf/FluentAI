@@ -28,7 +28,7 @@ export default async function RootLayout({
         `}} />
       </head>
       <body
-        className="font-sans antialiased flex flex-col md:flex-row min-h-screen"
+        className="font-sans antialiased flex flex-col md:flex-row min-h-screen overflow-hidden"
         style={{
           background: 'var(--bg-primary)',
           color: 'var(--text-primary)',
@@ -43,9 +43,19 @@ export default async function RootLayout({
             {session && <Sidebar user={session.user} />}
             <main 
               id="main-content" 
-              className="flex-1 flex flex-col min-w-0 pt-16 md:pt-0"
-              style={{ minHeight: '100vh' }}
+              className="flex-1 flex flex-col min-w-0"
+              style={{ 
+                minHeight: '100vh',
+                // Use a margin-top on mobile to push past the fixed header
+                // We'll use a CSS variable or media query via a style tag for better control
+              }}
             >
+              <style dangerouslySetInnerHTML={{ __html: `
+                #main-content { padding-top: 64px; }
+                @media (min-width: 768px) {
+                  #main-content { padding-top: 0; }
+                }
+              `}} />
               <div className="flex-1 p-4 md:p-8 overflow-auto page-animate">
                 {children}
               </div>

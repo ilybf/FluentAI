@@ -75,9 +75,6 @@ export function Sidebar({ user }: { user: any }) {
         </button>
       </div>
 
-      {/* Mobile spacer for fixed top bar */}
-      <div className="md:hidden h-14 shrink-0" />
-
       {/* ============ MOBILE BACKDROP ============ */}
       <div
         className={`sidebar-backdrop md:hidden ${mobileOpen ? 'active' : ''}`}

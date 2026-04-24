@@ -91,10 +91,14 @@ export default function ReadingPracticePage() {
 
   return (
     <div className="max-w-5xl mx-auto space-y-8">
-      <div>
-        <h1 className="text-2xl sm:text-3xl font-bold" style={{ color: 'var(--text-primary)' }}>Reading Practice</h1>
-        <p className="mt-1" style={{ color: 'var(--text-secondary)' }}>Read passages, answer questions, and get fresh AI-generated stories when you master them.</p>
-      </div>
+      <header className="border-b pb-4" style={{ borderColor: 'var(--border-subtle)' }}>
+        <h1 className="text-2xl sm:text-3xl font-extrabold" style={{ color: 'var(--text-primary)' }}>
+          Reading Practice
+        </h1>
+        <p className="mt-2 text-sm sm:text-base" style={{ color: 'var(--text-secondary)' }}>
+          Read passages, answer questions, and get fresh AI-generated stories when you master them.
+        </p>
+      </header>
 
       {errorMsg && (<div className="p-4 rounded-xl border" role="alert" style={{ background: 'rgba(239,68,68,0.1)', borderColor: 'rgba(239,68,68,0.2)', color: 'var(--accent-red)' }}>⚠️ {errorMsg}</div>)}
 
