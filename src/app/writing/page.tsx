@@ -36,17 +36,24 @@ export default function WritingPracticePage() {
     }
   };
 
+  const getScoreColor = (score: number) => {
+    if (score >= 80) return 'var(--score-high)';
+    if (score >= 50) return 'var(--score-mid)';
+    return 'var(--score-low)';
+  };
+
   return (
-    <div className="max-w-5xl mx-auto space-y-6">
+    <div className="max-w-5xl mx-auto space-y-8">
       <div>
         <h1 className="text-2xl sm:text-3xl font-bold" style={{ color: 'var(--text-primary)' }}>Writing Practice</h1>
-        <p style={{ color: 'var(--text-secondary)' }}>Write a short paragraph in English and get instant AI feedback on your grammar and style.</p>
+        <p className="mt-1" style={{ color: 'var(--text-secondary)' }}>Write a short paragraph in English and get instant AI feedback on your grammar and style.</p>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
         <Card className="p-4 sm:p-6 flex flex-col h-[400px] sm:h-[500px]">
           <h2 className="text-lg font-medium mb-4" style={{ color: 'var(--text-primary)' }}>Your Text</h2>
           <textarea
+            id="writing-input"
             className="flex-1 w-full p-3 sm:p-4 rounded-xl resize-none focus:ring-2 focus:ring-blue-500/50 outline-none transition-all duration-200 text-sm sm:text-base theme-transition"
             style={{
               background: 'var(--bg-input)',
@@ -76,7 +83,7 @@ export default function WritingPracticePage() {
           )}
 
           {errorMsg && (
-            <div className="h-full flex flex-col items-center justify-center text-red-400">
+            <div className="h-full flex flex-col items-center justify-center" style={{ color: 'var(--accent-red)' }}>
               <span className="text-4xl mb-2">⚠️</span>
               <p className="text-center px-4">{errorMsg}</p>
             </div>
@@ -91,7 +98,7 @@ export default function WritingPracticePage() {
           {feedback && !loading && (
             <div className="space-y-6">
               <div className="flex items-center gap-4">
-                <div className={`text-3xl font-bold ${feedback.score >= 80 ? 'text-emerald-400' : feedback.score >= 50 ? 'text-amber-400' : 'text-red-400'}`}>
+                <div className="text-3xl font-bold" style={{ color: getScoreColor(feedback.score) }}>
                   {feedback.score}/100
                 </div>
                 <div className="text-sm font-medium uppercase tracking-wider" style={{ color: 'var(--text-secondary)' }}>Overall Score</div>
@@ -99,7 +106,7 @@ export default function WritingPracticePage() {
 
               <div>
                 <h3 className="font-semibold mb-2" style={{ color: 'var(--text-primary)' }}>Corrected Version:</h3>
-                <div className="p-3 sm:p-4 rounded-xl text-sm sm:text-base" style={{ background: 'rgba(16,185,129,0.1)', border: '1px solid rgba(16,185,129,0.2)', color: '#34d399' }}>
+                <div className="p-3 sm:p-4 rounded-xl text-sm sm:text-base" style={{ background: 'rgba(16,185,129,0.1)', border: '1px solid rgba(16,185,129,0.2)', color: 'var(--accent-emerald-text)' }}>
                   {feedback.correctedText}
                 </div>
               </div>

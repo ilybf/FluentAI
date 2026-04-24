@@ -12,6 +12,13 @@ type ChatSessionMeta = {
   lastActive: string;
 };
 
+const PROMPT_SUGGESTIONS = [
+  "Can we practice ordering food at a restaurant?",
+  "Help me write a formal email to my boss",
+  "Let's discuss a current news topic",
+  "Quiz me on irregular verbs",
+];
+
 export default function ChatTutorPage() {
   const [sessions, setSessions] = useState<ChatSessionMeta[]>([]);
   const [activeSessionId, setActiveSessionId] = useState<string | null>(null);
@@ -19,7 +26,7 @@ export default function ChatTutorPage() {
   const [loadingMessages, setLoadingMessages] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
-  const { messages, setMessages, input, handleInputChange, handleSubmit, isLoading, error } = useChat({
+  const { messages, setMessages, input, setInput, handleInputChange, handleSubmit, isLoading, error } = useChat({
     api: '/api/chat',
     body: {
       sessionId: activeSessionId,
@@ -97,6 +104,10 @@ export default function ChatTutorPage() {
     }
   };
 
+  const handlePromptClick = (prompt: string) => {
+    setInput(prompt);
+  };
+
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages, loadingMessages]);
@@ -111,6 +122,15 @@ export default function ChatTutorPage() {
           {sidebarOpen ? 'Close History' : 'View History'}
         </Button>
       </div>
+
+      {/* Mobile Chat Sidebar Backdrop */}
+      {sidebarOpen && (
+        <div 
+          className="md:hidden fixed inset-0 z-10 transition-opacity duration-200"
+          style={{ background: 'rgba(0,0,0,0.3)', backdropFilter: 'blur(4px)' }}
+          onClick={() => setSidebarOpen(false)} 
+        />
+      )}
 
       {/* Left Sidebar - Chat History */}
       <Card className={`${sidebarOpen ? 'flex' : 'hidden'} md:flex flex-col w-full md:w-72 shrink-0 shadow-lg absolute md:relative z-20 h-[calc(100vh-10rem)] md:h-full`}>
@@ -144,8 +164,10 @@ export default function ChatTutorPage() {
               </button>
               <button
                 onClick={(e) => deleteSession(e, s._id)}
-                className="absolute right-2 top-1/2 -translate-y-1/2 p-1.5 text-red-500 opacity-0 group-hover:opacity-100 transition-opacity hover:bg-red-500/10 rounded-lg"
+                className="absolute right-2 top-1/2 -translate-y-1/2 p-1.5 opacity-0 group-hover:opacity-100 transition-opacity hover:bg-red-500/10 rounded-lg"
+                style={{ color: 'var(--accent-red)' }}
                 title="Delete Conversation"
+                aria-label={`Delete conversation: ${s.title}`}
               >
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
               </button>
@@ -173,8 +195,25 @@ export default function ChatTutorPage() {
               <div>
                 <h3 className="text-lg sm:text-xl font-medium" style={{ color: 'var(--text-primary)' }}>Start a new conversation!</h3>
                 <p className="max-w-sm mx-auto mt-2 text-sm sm:text-base" style={{ color: 'var(--text-secondary)' }}>
-                  Try asking: &ldquo;Can we practice ordering food in a restaurant?&rdquo;
+                  Pick a topic below or type your own message to begin.
                 </p>
+              </div>
+              {/* Prompt Suggestions */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-4 w-full max-w-md">
+                {PROMPT_SUGGESTIONS.map((prompt) => (
+                  <button
+                    key={prompt}
+                    onClick={() => handlePromptClick(prompt)}
+                    className="text-left p-3 rounded-xl text-sm transition-all duration-200 hover:scale-[1.02] group/prompt"
+                    style={{
+                      background: 'var(--bg-input)',
+                      border: '1px solid var(--border-subtle)',
+                      color: 'var(--text-secondary)',
+                    }}
+                  >
+                    <span className="group-hover/prompt:text-blue-400 transition-colors">{prompt}</span>
+                  </button>
+                ))}
               </div>
             </div>
           )}
@@ -221,7 +260,7 @@ export default function ChatTutorPage() {
           )}
           {error && (
             <div className="flex justify-center my-4">
-              <div className="px-4 py-2 rounded-xl text-sm" style={{ background: 'rgba(239,68,68,0.1)', color: '#f87171', border: '1px solid rgba(239,68,68,0.2)' }}>
+              <div className="px-4 py-2 rounded-xl text-sm" role="alert" style={{ background: 'rgba(239,68,68,0.1)', color: 'var(--accent-red)', border: '1px solid rgba(239,68,68,0.2)' }}>
                 ⚠️ {error.message || 'An error occurred while communicating with the AI tutor.'}
               </div>
             </div>
@@ -237,6 +276,8 @@ export default function ChatTutorPage() {
               placeholder="Type your message in English..."
               className="flex-1"
               disabled={isLoading || loadingMessages}
+              id="chat-input"
+              name="chat-input"
             />
             <Button type="submit" disabled={isLoading || loadingMessages || !input.trim()}>
               Send

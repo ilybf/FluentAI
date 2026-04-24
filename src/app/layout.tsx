@@ -19,6 +19,14 @@ export default async function RootLayout({
 
   return (
     <html lang="en" suppressHydrationWarning style={{ height: '100%' }}>
+      <head>
+        <script dangerouslySetInnerHTML={{ __html: `
+          try {
+            var t = localStorage.getItem('fluentai-theme');
+            if (t === 'light') document.documentElement.setAttribute('data-theme', 'light');
+          } catch(e) {}
+        `}} />
+      </head>
       <body
         className="font-sans antialiased"
         style={{
@@ -30,11 +38,14 @@ export default async function RootLayout({
           flexDirection: 'row',
         }}
       >
+        <a href="#main-content" className="skip-to-content">
+          Skip to content
+        </a>
         <AuthProvider>
           <ThemeProvider>
             {session && <Sidebar user={session.user} />}
-            <main style={{ flex: 1, display: 'flex', flexDirection: 'column', minWidth: 0, minHeight: '100vh' }}>
-              <div className="flex-1 p-4 md:p-8 overflow-auto">
+            <main id="main-content" style={{ flex: 1, display: 'flex', flexDirection: 'column', minWidth: 0, minHeight: '100vh' }}>
+              <div className="flex-1 p-4 md:p-8 overflow-auto page-animate">
                 {children}
               </div>
             </main>
