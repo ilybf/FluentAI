@@ -44,20 +44,14 @@ export default async function RootLayout({
             <main 
               id="main-content" 
               className="flex-1 flex flex-col min-w-0"
-              style={{ 
-                minHeight: '100vh',
-                // Use a margin-top on mobile to push past the fixed header
-                // We'll use a CSS variable or media query via a style tag for better control
-              }}
+              style={{ minHeight: '100vh' }}
             >
-              <style dangerouslySetInnerHTML={{ __html: `
-                #main-content { padding-top: 64px; }
-                @media (min-width: 768px) {
-                  #main-content { padding-top: 0; }
-                }
-              `}} />
-              <div className="flex-1 p-4 md:p-8 overflow-auto page-animate">
-                {children}
+              <div className="flex-1 overflow-auto page-animate">
+                {/* Mobile spacer: pushes content below the fixed header, but scrolls with the content */}
+                <div className="md:hidden shrink-0 w-full" style={{ height: '72px' }} />
+                <div className="p-4 md:p-8">
+                  {children}
+                </div>
               </div>
             </main>
           </ThemeProvider>
