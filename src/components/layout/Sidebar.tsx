@@ -12,6 +12,7 @@ const navItems = [
   { name: 'Writing', href: '/writing', icon: '✍️' },
   { name: 'Chat Tutor', href: '/chat', icon: '💬' },
   { name: 'Vocabulary', href: '/vocabulary', icon: '📚' },
+  { name: 'Profile', href: '/profile', icon: '👤' },
 ] as const;
 
 export function Sidebar({ user }: { user: any }) {

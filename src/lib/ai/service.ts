@@ -39,10 +39,10 @@ Your passages must:
 
 /**
  * Simple sliding-window rate limiter.
- * Gemini free tier allows ~15 RPM — we enforce 10 RPM to stay safely below.
+ * Free Gemini API — 5 RPM as a safety net against runaway requests.
  */
 const RATE_LIMIT_WINDOW_MS = 60_000; // 1 minute
-const MAX_REQUESTS_PER_WINDOW = 10;
+const MAX_REQUESTS_PER_WINDOW = 5;
 const requestTimestamps: number[] = [];
 
 function checkRateLimit(): boolean {
@@ -60,14 +60,14 @@ function checkRateLimit(): boolean {
 
 /**
  * AI Service Layer
- * Abstracts the provider (Gemini 2.0 Flash) from the route logic.
+ * Abstracts the provider (Gemini 2.5 Flash) from the route logic.
  * 
  * Key: maxRetries is set to 0 everywhere to prevent the AI SDK from
  * auto-retrying on 429/503 — on a free-tier API key every retry counts
  * against the quota and causes a cascade of failures.
  */
 export class AIService {
-  static async getChatStream(messages: any[], systemPrompt: string) {
+  static async getChatStream(messages: any[], systemPrompt: string, onFinish?: (completion: string) => Promise<void>) {
     if (!checkRateLimit()) {
       throw new Error('RATE_LIMITED');
     }
@@ -77,6 +77,11 @@ export class AIService {
         system: systemPrompt,
         messages,
         maxRetries: 0,
+        onFinish: async ({ text }) => {
+          if (onFinish) {
+            await onFinish(text);
+          }
+        }
       });
       return result.toDataStreamResponse();
     } catch (error) {

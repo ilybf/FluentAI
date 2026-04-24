@@ -8,6 +8,7 @@ export interface IChatMessage {
 
 export interface IChatSession extends Document {
   userId: mongoose.Types.ObjectId;
+  title: string;
   messages: IChatMessage[];
   lastActive: Date;
 }
@@ -26,6 +27,7 @@ const ChatSessionSchema = new Schema<IChatSession>(
       required: true,
       index: true, // Index for O(1) lookup by userId instead of collection scan
     },
+    title: { type: String, default: "New Conversation" },
     messages: { type: [ChatMessageSchema], default: [] },
     lastActive: { type: Date, default: Date.now },
   },
