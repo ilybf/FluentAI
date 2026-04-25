@@ -60,11 +60,8 @@ export default function ChatTutorPage() {
     fetchSessions();
   }, []);
 
-  useEffect(() => {
-    if (sessionsLoaded && sessions.length > 0 && activeSessionId === null) {
-      loadSession(sessions[0]._id);
-    }
-  }, [sessionsLoaded, sessions]);
+  // Start with a blank conversation — users can load old ones from the sidebar
+  // (Previously auto-loaded the most recent session)
 
   const loadSession = async (id: string) => {
     setActiveSessionId(id);

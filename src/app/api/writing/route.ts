@@ -4,7 +4,7 @@ import { authOptions } from '@/lib/auth';
 import dbConnect from '@/lib/db/mongoose';
 import { WritingSubmission } from '@/models/WritingSubmission';
 import { AIService } from '@/lib/ai/service';
-import { User } from '@/models/User';
+import { awardXP, awardStreakBonus, XP } from '@/lib/scoring';
 
 export async function POST(req: NextRequest) {
   try {
@@ -55,10 +55,20 @@ export async function POST(req: NextRequest) {
     
     await submission.save();
 
-    // Update user score
-    await User.findByIdAndUpdate(session.user.id, {
-      $inc: { totalScore: feedback.score }
-    });
+    // Award XP via scoring engine (replaces raw $inc)
+    const xpResult = await awardXP(
+      session.user.id,
+      "writing",
+      feedback.score * XP.WRITING_MULTIPLIER,
+      {
+        submissionId: submission._id.toString(),
+        details: `Writing submission scored ${feedback.score}/100`,
+        score: feedback.score,
+      }
+    );
+
+    // Check for streak bonus
+    await awardStreakBonus(session.user.id);
 
     return NextResponse.json({
       score: feedback.score,
@@ -66,6 +76,11 @@ export async function POST(req: NextRequest) {
       feedback: {
         grammar: feedback.grammar,
         style: feedback.style,
+      },
+      xp: {
+        awarded: xpResult.awarded,
+        leveledUp: xpResult.leveledUp,
+        newLevel: xpResult.newLevel,
       },
     });
   } catch (error) {

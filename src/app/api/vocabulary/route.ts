@@ -3,6 +3,7 @@ import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import dbConnect from '@/lib/db/mongoose';
 import { VocabularyEntry } from '@/models/VocabularyEntry';
+import { awardXP, awardStreakBonus, XP } from '@/lib/scoring';
 
 export async function GET(req: NextRequest) {
   try {
@@ -49,6 +50,15 @@ export async function POST(req: NextRequest) {
     });
 
     await entry.save();
+
+    // Award XP for vocabulary addition
+    await awardXP(session.user.id, "vocabulary", XP.VOCAB_PER_WORD, {
+      submissionId: entry._id.toString(),
+      details: `Added word: ${word.trim().slice(0, 30)}`,
+    });
+
+    // Check for streak bonus
+    await awardStreakBonus(session.user.id);
 
     return NextResponse.json(entry, { status: 201 });
   } catch (error) {

@@ -24,7 +24,7 @@ if (!cached) {
 }
 
 const MAX_RETRIES = 3;
-const RETRY_DELAY_MS = 2000;
+const RETRY_DELAY_MS = 1000;
 
 const wait = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
 
@@ -38,9 +38,10 @@ async function dbConnect(retries = MAX_RETRIES): Promise<typeof mongoose> {
       bufferCommands: false,
       maxPoolSize: 5,              // Reduced from 10 — sufficient for typical workload, halves idle connection memory
       minPoolSize: 1,              // Keep at least 1 connection warm to avoid cold-start latency
-      serverSelectionTimeoutMS: 10000,
+      serverSelectionTimeoutMS: 20000,  // 20s — Atlas free tier cold-starts can be slow
+      connectTimeoutMS: 20000,         // 20s connect timeout
       socketTimeoutMS: 45000,
-      maxIdleTimeMS: 30000,        // Close idle connections after 30s to free memory
+      maxIdleTimeMS: 60000,        // Keep connections alive longer to reduce reconnection delays
       autoIndex: process.env.NODE_ENV !== 'production', // Skip auto-indexing in prod (indexes should be created via migration)
       family: 4,                   // Force IPv4 — fixes SRV ECONNREFUSED on Windows where IPv6 DNS fails
     };

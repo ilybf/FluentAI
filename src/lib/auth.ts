@@ -42,6 +42,8 @@ export const authOptions: NextAuthOptions = {
             level: user.level,
             nativeLanguage: user.nativeLanguage,
             totalScore: user.totalScore,
+            role: user.role || "student",
+            avatarUrl: user.avatarUrl || "",
           };
         } catch (error: any) {
           console.error("Auth Authorize Error:", error.message);
@@ -57,6 +59,8 @@ export const authOptions: NextAuthOptions = {
         token.level = user.level as string;
         token.nativeLanguage = user.nativeLanguage as string;
         token.totalScore = user.totalScore as number;
+        token.role = (user.role as string) || "student";
+        token.avatarUrl = (user.avatarUrl as string) || "";
       }
       
       // Update token if session is updated
@@ -65,6 +69,8 @@ export const authOptions: NextAuthOptions = {
         token.nativeLanguage = session.nativeLanguage || token.nativeLanguage;
         token.name = session.name || token.name;
         token.totalScore = session.totalScore ?? token.totalScore;
+        token.role = session.role || token.role;
+        token.avatarUrl = session.avatarUrl ?? token.avatarUrl;
       }
       
       return token;
@@ -75,6 +81,8 @@ export const authOptions: NextAuthOptions = {
         session.user.level = token.level;
         session.user.nativeLanguage = token.nativeLanguage;
         session.user.totalScore = token.totalScore;
+        session.user.role = token.role;
+        session.user.avatarUrl = token.avatarUrl;
       }
       return session;
     },

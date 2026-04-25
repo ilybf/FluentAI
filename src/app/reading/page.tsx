@@ -73,7 +73,7 @@ export default function ReadingPracticePage() {
     if (!selectedPassage) return;
     setReplacing(true); setReplaceMsg('');
     try {
-      const res = await fetch('/api/reading', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ passageId: selectedPassage._id }) });
+      const res = await fetch('/api/reading', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ passageId: selectedPassage._id, quizScore: { correct: getScore(), total: selectedPassage.questions.length } }) });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || 'Failed to replace passage');
       if (data.replaced && data.newPassage) {

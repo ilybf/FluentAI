@@ -5,6 +5,7 @@ import { authOptions } from '@/lib/auth';
 import dbConnect from '@/lib/db/mongoose';
 import { ChatSession } from '@/models/ChatSession';
 import { NextRequest } from 'next/server';
+import { awardXP, awardStreakBonus, XP } from '@/lib/scoring';
 
 // Cap the number of messages sent to the AI to avoid unbounded token/memory usage
 const MAX_AI_CONTEXT_MESSAGES = 30;
@@ -67,6 +68,16 @@ export async function POST(req: NextRequest) {
     
     // Add sessionId to headers so the client knows which session was updated/created
     streamResponse.headers.set('X-Session-Id', activeSessionId.toString());
+
+    // Award XP for the user message (fire-and-forget, don't block the stream)
+    awardXP(session.user.id, "chat", XP.CHAT_PER_MESSAGE, {
+      submissionId: activeSessionId.toString(),
+      details: "Chat message sent",
+    }).catch(err => console.error("Chat XP award failed:", err));
+
+    // Check for streak bonus (fire-and-forget)
+    awardStreakBonus(session.user.id).catch(err => console.error("Streak bonus failed:", err));
+
     return streamResponse;
   } catch (error: any) {
     console.error('Chat API Error:', error);

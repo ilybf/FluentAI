@@ -7,6 +7,8 @@ declare module "next-auth" {
     level: string;
     nativeLanguage: string;
     totalScore: number;
+    role: string;
+    avatarUrl: string;
   }
 
   interface Session {
@@ -15,6 +17,8 @@ declare module "next-auth" {
       level: string;
       nativeLanguage: string;
       totalScore: number;
+      role: string;
+      avatarUrl: string;
     } & DefaultSession["user"];
   }
 }
@@ -25,5 +29,7 @@ declare module "next-auth/jwt" {
     level: string;
     nativeLanguage: string;
     totalScore: number;
+    role: string;
+    avatarUrl: string;
   }
 }

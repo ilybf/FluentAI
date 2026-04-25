@@ -4,6 +4,7 @@ import { authOptions } from '@/lib/auth';
 import dbConnect from '@/lib/db/mongoose';
 import { ReadingPassage } from '@/models/ReadingPassage';
 import { AIService } from '@/lib/ai/service';
+import { awardXP, awardStreakBonus, XP } from '@/lib/scoring';
 
 /**
  * Minimal seed passages — one per level as initial fallback content.
@@ -92,7 +93,21 @@ export async function GET(req: NextRequest) {
     await dbConnect();
     await ensurePassagesExist();
 
-    const filter = level ? { level } : {};
+    // Auto-filter to user's level and one above, unless explicit level requested
+    let filter: Record<string, any> = {};
+    if (level) {
+      filter = { level };
+    } else {
+      const userLevel = (session as any).user?.level || 'A1';
+      const levelOrder = ['A1', 'A2', 'B1', 'B2', 'C1', 'C2'];
+      const idx = levelOrder.indexOf(userLevel);
+      const allowedLevels = [userLevel];
+      if (idx >= 0 && idx < levelOrder.length - 1) {
+        allowedLevels.push(levelOrder[idx + 1]);
+      }
+      filter = { level: { $in: allowedLevels } };
+    }
+
     const passages = await ReadingPassage.find(filter).sort({ level: 1, createdAt: -1 }).lean();
 
     return NextResponse.json(passages);
@@ -110,17 +125,43 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const { passageId } = await req.json();
+    const { passageId, quizScore } = await req.json();
     if (!passageId) {
       return NextResponse.json({ error: 'passageId is required' }, { status: 400 });
     }
 
     await dbConnect();
 
-    // Find the completed passage to know its level
-    const completedPassage = await ReadingPassage.findById(passageId).lean();
+    // Atomically find and delete the completed passage to prevent double-processing
+    const completedPassage = await ReadingPassage.findByIdAndDelete(passageId).lean();
     if (!completedPassage) {
-      return NextResponse.json({ error: 'Passage not found' }, { status: 404 });
+      return NextResponse.json({ error: 'Passage not found or already processed' }, { status: 400 });
+    }
+
+    // ─── Award XP for quiz completion ───────────────────────
+    let xpResult: { awarded: number; leveledUp: boolean; newLevel?: string } = { awarded: 0, leveledUp: false };
+    if (quizScore && typeof quizScore.correct === 'number' && typeof quizScore.total === 'number' && quizScore.total > 0) {
+      const ratio = quizScore.correct / quizScore.total;
+      let xpPoints = Math.round(ratio * XP.READING_BASE);
+
+      // Perfect score bonus
+      if (quizScore.correct === quizScore.total) {
+        xpPoints += XP.READING_PERFECT_BONUS;
+      }
+
+      xpResult = await awardXP(
+        session.user.id,
+        "reading",
+        xpPoints,
+        {
+          submissionId: passageId,
+          details: `Reading quiz: ${quizScore.correct}/${quizScore.total}`,
+          score: Math.round(ratio * 100),
+        }
+      );
+
+      // Check for streak bonus
+      await awardStreakBonus(session.user.id);
     }
 
     const level = completedPassage.level;
@@ -128,9 +169,6 @@ export async function POST(req: NextRequest) {
     // Get existing titles at this level to avoid repetition
     const existingTitles = await ReadingPassage.find({ level }).select('title').lean();
     const avoidTitles = existingTitles.map((p: any) => p.title);
-
-    // Delete the completed passage
-    await ReadingPassage.findByIdAndDelete(passageId);
 
     // Generate a new AI passage as replacement
     let newPassage;
@@ -160,6 +198,11 @@ export async function POST(req: NextRequest) {
       message: 'Passage completed! A new one has been generated.',
       replaced: true,
       newPassage,
+      xp: {
+        awarded: xpResult.awarded,
+        leveledUp: xpResult.leveledUp,
+        newLevel: xpResult.newLevel,
+      },
     });
   } catch (error) {
     console.error('Reading API POST Error:', error);

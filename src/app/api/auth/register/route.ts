@@ -39,7 +39,8 @@ export async function POST(req: Request) {
       passwordHash,
       displayName,
       nativeLanguage: nativeLanguage || 'Spanish',
-      level: level || 'A1'
+      level: level || 'A1',
+      registrationLevel: level || 'A1',
     });
 
     return NextResponse.json({ message: 'User created successfully', userId: newUser._id }, { status: 201 });

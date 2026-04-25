@@ -32,12 +32,26 @@ export async function PUT(req: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const { displayName, nativeLanguage } = await req.json();
+    const { displayName, nativeLanguage, bio, avatarUrl } = await req.json();
 
     await dbConnect();
+
+    const updateData: Record<string, any> = {};
+    if (displayName !== undefined) updateData.displayName = displayName;
+    if (nativeLanguage !== undefined) updateData.nativeLanguage = nativeLanguage;
+    if (bio !== undefined) updateData.bio = String(bio).slice(0, 300);
+    if (avatarUrl !== undefined) {
+      // Data URLs (uploaded images) can be large; emoji avatars are short
+      if (String(avatarUrl).startsWith('data:image/')) {
+        updateData.avatarUrl = String(avatarUrl); // Already size-validated by /api/user/avatar
+      } else {
+        updateData.avatarUrl = String(avatarUrl).slice(0, 200);
+      }
+    }
+
     const updatedUser = await User.findByIdAndUpdate(
       session.user.id,
-      { displayName, nativeLanguage },
+      updateData,
       { new: true }
     ).select('-passwordHash').lean();
 

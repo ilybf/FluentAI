@@ -6,14 +6,33 @@ import { useState, useEffect } from 'react';
 import { useTheme } from '@/components/providers/ThemeProvider';
 
 // Static data hoisted to module scope — allocated once, never re-created across renders
-const navItems = [
+const studentNavItems = [
   { name: 'Dashboard', href: '/dashboard', icon: '📊' },
   { name: 'Reading', href: '/reading', icon: '📖' },
   { name: 'Writing', href: '/writing', icon: '✍️' },
   { name: 'Chat Tutor', href: '/chat', icon: '💬' },
   { name: 'Vocabulary', href: '/vocabulary', icon: '📚' },
+  { name: 'Classroom', href: '/classroom', icon: '🎓' },
   { name: 'Profile', href: '/profile', icon: '👤' },
 ] as const;
+
+const teacherNavItems = [
+  { name: 'Dashboard', href: '/teacher/dashboard', icon: '📊' },
+  { name: 'Profile', href: '/profile', icon: '👤' },
+] as const;
+
+const adminNavItems = [
+  { name: 'Dashboard', href: '/admin/dashboard', icon: '⚙️' },
+  { name: 'Users', href: '/admin/dashboard', icon: '👥' },
+  { name: 'Classrooms', href: '/admin/dashboard', icon: '🏫' },
+  { name: 'Profile', href: '/profile', icon: '👤' },
+] as const;
+
+function getNavItems(role: string) {
+  if (role === 'teacher') return teacherNavItems;
+  if (role === 'admin') return adminNavItems;
+  return studentNavItems;
+}
 
 export function Sidebar({ user }: { user: any }) {
   const pathname = usePathname();
@@ -111,7 +130,7 @@ export function Sidebar({ user }: { user: any }) {
 
         {/* Mobile Nav */}
         <nav className="flex-1 px-3 space-y-1 overflow-y-auto">
-          {navItems.map((item) => {
+          {getNavItems(user?.role || 'student').map((item) => {
             const isActive = pathname.startsWith(item.href);
             return (
               <Link
@@ -140,7 +159,7 @@ export function Sidebar({ user }: { user: any }) {
           <div className="rounded-xl p-3 flex items-center justify-between theme-transition" style={{ background: 'var(--glass-bg)', border: '1px solid var(--border-subtle)' }}>
             <div className="flex flex-col truncate">
               <span className="font-medium text-sm truncate" style={{ color: 'var(--text-primary)' }}>{user?.name}</span>
-              <span className="text-xs" style={{ color: 'var(--text-muted)' }}>Level: {user?.level}</span>
+              <span className="text-xs" style={{ color: 'var(--text-muted)' }}>{user?.role === 'teacher' ? '👩‍🏫 Teacher' : `Level: ${user?.level}`}</span>
             </div>
             <button
               onClick={() => signOut()}
@@ -194,7 +213,7 @@ export function Sidebar({ user }: { user: any }) {
 
         {/* Nav items */}
         <nav className="flex-1 px-2 space-y-1 overflow-y-auto overflow-x-hidden">
-          {navItems.map((item) => {
+          {getNavItems(user?.role || 'student').map((item) => {
             const isActive = pathname.startsWith(item.href);
             return (
               <Link
@@ -260,7 +279,7 @@ export function Sidebar({ user }: { user: any }) {
             <div className="rounded-xl p-3 flex items-center justify-between theme-transition" style={{ background: 'var(--glass-bg)', border: '1px solid var(--border-subtle)' }}>
               <div className="flex flex-col truncate">
                 <span className="font-medium text-sm truncate" style={{ color: 'var(--text-primary)' }}>{user?.name}</span>
-                <span className="text-xs" style={{ color: 'var(--text-muted)' }}>Level: {user?.level}</span>
+                <span className="text-xs" style={{ color: 'var(--text-muted)' }}>{user?.role === 'teacher' ? '👩‍🏫 Teacher' : `Level: ${user?.level}`}</span>
               </div>
               <button
                 onClick={() => signOut()}
