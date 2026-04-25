@@ -162,7 +162,7 @@ export function Sidebar({ user }: { user: any }) {
               <span className="text-xs" style={{ color: 'var(--text-muted)' }}>{user?.role === 'teacher' ? '👩‍🏫 Teacher' : `Level: ${user?.level}`}</span>
             </div>
             <button
-              onClick={() => signOut()}
+              onClick={() => signOut({ callbackUrl: '/' })}
               className="p-1.5 rounded-lg transition-colors duration-200 hover:bg-red-500/10"
               style={{ color: 'var(--text-muted)' }}
               title="Log out"
@@ -282,7 +282,7 @@ export function Sidebar({ user }: { user: any }) {
                 <span className="text-xs" style={{ color: 'var(--text-muted)' }}>{user?.role === 'teacher' ? '👩‍🏫 Teacher' : `Level: ${user?.level}`}</span>
               </div>
               <button
-                onClick={() => signOut()}
+                onClick={() => signOut({ callbackUrl: '/' })}
                 className="p-1.5 rounded-lg transition-colors duration-200 hover:bg-red-500/10 shrink-0"
                 style={{ color: 'var(--text-muted)' }}
                 title="Log out"
@@ -293,7 +293,7 @@ export function Sidebar({ user }: { user: any }) {
             </div>
           ) : (
             <button
-              onClick={() => signOut()}
+              onClick={() => signOut({ callbackUrl: '/' })}
               className="w-full flex items-center justify-center p-2.5 rounded-xl transition-colors duration-200 hover:bg-red-500/10"
               style={{ color: 'var(--text-muted)', background: 'var(--glass-bg)', border: '1px solid var(--border-subtle)' }}
               title="Log out"
