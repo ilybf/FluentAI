@@ -3,6 +3,7 @@ import { useState, useEffect } from 'react';
 import { useSession } from 'next-auth/react';
 import { Card } from '@/components/ui/Card';
 import Link from 'next/link';
+import { Trophy, MessageCircle, Library, PenTool, Flame, Sparkles, BookOpen } from 'lucide-react';
 
 interface StatsData {
   totalScore: number;
@@ -27,48 +28,28 @@ interface StatsData {
   }[];
 }
 
-const typeIcons: Record<string, string> = {
-  writing: '✍️',
-  reading: '📖',
-  chat: '💬',
-  vocabulary: '📚',
-  streak: '🔥',
-  level_up: '🎉',
-};
-
-const typeColors: Record<string, string> = {
-  writing: 'rgba(99,102,241,0.15)',
-  reading: 'rgba(16,185,129,0.15)',
-  chat: 'rgba(59,130,246,0.15)',
-  vocabulary: 'rgba(168,85,247,0.15)',
-  streak: 'rgba(245,158,11,0.15)',
-  level_up: 'rgba(236,72,153,0.15)',
+const typeIcons: Record<string, any> = {
+  writing: <PenTool size={24} />, reading: <BookOpen size={24} />, chat: <MessageCircle size={24} />, vocabulary: <Library size={24} />, streak: <Flame size={24} />, level_up: <Sparkles size={24} />,
 };
 
 function timeAgo(dateStr: string) {
-  const now = Date.now();
-  const diff = now - new Date(dateStr).getTime();
+  const diff = Date.now() - new Date(dateStr).getTime();
   const mins = Math.floor(diff / 60000);
   if (mins < 1) return 'just now';
   if (mins < 60) return `${mins}m ago`;
   const hours = Math.floor(mins / 60);
   if (hours < 24) return `${hours}h ago`;
-  const days = Math.floor(hours / 24);
-  return `${days}d ago`;
+  return `${Math.floor(hours / 24)}d ago`;
 }
 
 function DashboardSkeleton() {
   return (
-    <div className="max-w-5xl mx-auto space-y-8">
-      <div><div className="skeleton h-8 w-72 mb-2" /><div className="skeleton h-4 w-48" /></div>
-      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
-        {[...Array(4)].map((_, i) => <Card key={i} className="p-6"><div className="skeleton h-5 w-20 mb-3" /><div className="skeleton h-8 w-16" /></Card>)}
+    <div className="space-y-10 w-full animate-pulse">
+      <div className="h-12 w-64 bg-[var(--bg-input)] rounded-xl" />
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6">
+        {[...Array(4)].map((_, i) => <div key={i} className="h-32 bg-[var(--bg-input)] rounded-3xl" />)}
       </div>
-      <div className="skeleton h-6 w-full rounded-full" />
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <Card className="p-6"><div className="skeleton h-5 w-40 mb-4" />{[...Array(4)].map((_, i) => <div key={i} className="skeleton h-4 w-full mb-2" />)}</Card>
-        <Card className="p-6"><div className="skeleton h-5 w-40 mb-4" />{[...Array(4)].map((_, i) => <div key={i} className="skeleton h-8 w-full mb-2 rounded-lg" />)}</Card>
-      </div>
+      <div className="h-40 bg-[var(--bg-input)] rounded-3xl" />
     </div>
   );
 }
@@ -82,9 +63,7 @@ export default function DashboardPage() {
     async function fetchStats() {
       try {
         const res = await fetch('/api/stats');
-        if (res.ok) {
-          setStats(await res.json());
-        }
+        if (res.ok) setStats(await res.json());
       } catch (err) {
         console.error('Failed to fetch stats:', err);
       } finally {
@@ -100,136 +79,136 @@ export default function DashboardPage() {
   const userLevel = stats?.level || session.user?.level || 'B1';
   const totalScore = stats?.totalScore ?? 0;
 
-  // Score breakdown for chart
   const breakdownTypes = ['writing', 'reading', 'chat', 'vocabulary', 'streak'];
-  const maxBreakdown = Math.max(
-    ...breakdownTypes.map(t => stats?.scoreBreakdown?.[t]?.total || 0),
-    1
-  );
+  const maxBreakdown = Math.max(...breakdownTypes.map(t => stats?.scoreBreakdown?.[t]?.total || 0), 1);
 
   return (
-    <div className="max-w-5xl mx-auto space-y-8">
-      {/* Header */}
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-        <div>
-          <h1 className="text-2xl sm:text-3xl font-bold" style={{ color: 'var(--text-primary)' }}>Welcome back, {userName}!</h1>
-          <p style={{ color: 'var(--text-secondary)' }}>Here is your English learning progress.</p>
+    <div className="space-y-12 pb-10 w-full page-animate">
+      
+      {/* HEADER SECTION */}
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-6">
+        <div className="space-y-2">
+          <p className="text-[var(--text-secondary)] font-medium tracking-wide uppercase text-sm">Dashboard</p>
+          <h1 className="text-4xl md:text-5xl font-extrabold tracking-tight" style={{ color: 'var(--text-primary)' }}>
+            Welcome back, <br className="hidden md:block" /> {userName}.
+          </h1>
         </div>
-        <div className="flex items-center gap-3">
+        <div className="flex gap-3">
           {stats?.streak && stats.streak.current > 0 && (
-            <div className="px-4 py-2 rounded-full font-medium text-sm flex items-center gap-2" style={{ background: 'rgba(245,158,11,0.12)', color: '#f59e0b', border: '1px solid rgba(245,158,11,0.2)' }}>
-              🔥 {stats.streak.current}-day streak
+            <div className="px-5 py-2.5 rounded-2xl font-bold flex items-center gap-2" style={{ background: 'var(--text-primary)', color: 'var(--bg-primary)' }}>
+              <Flame size={18} /> {stats.streak.current} Day Streak
             </div>
           )}
-          <div className="px-4 py-2 rounded-full font-medium text-sm" style={{ background: 'rgba(59,130,246,0.12)', color: 'var(--accent-blue)', border: '1px solid rgba(59,130,246,0.2)' }}>
-            CEFR Level: <span className="font-bold">{userLevel}</span>
+          <div className="px-5 py-2.5 rounded-2xl font-bold border" style={{ borderColor: 'var(--border-input)', color: 'var(--text-primary)' }}>
+            Level {userLevel}
           </div>
         </div>
       </div>
 
-      {/* Stats Cards */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        <Card className="p-5 sm:p-6">
-          <div className="text-3xl mb-3 inline-flex items-center justify-center w-12 h-12 rounded-xl" style={{ background: 'rgba(245,158,11,0.1)' }}>🏆</div>
-          <h3 className="font-medium text-sm" style={{ color: 'var(--text-secondary)' }}>Total XP</h3>
-          <p className="text-2xl sm:text-3xl font-bold mt-1" style={{ color: 'var(--text-primary)' }}>{totalScore.toLocaleString()}</p>
+      {/* QUICK STATS (Now 4 blocks) */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
+        <Card className="p-6 rounded-[2rem] shadow-sm hover:scale-[1.02] transition-transform">
+          <div className="flex justify-between items-start mb-4">
+            <h3 className="text-[var(--text-secondary)] font-semibold text-sm uppercase tracking-wider">Total XP</h3>
+            <div className="text-[var(--accent-amber)]"><Trophy size={28} /></div>
+          </div>
+          <p className="text-4xl font-black">{totalScore.toLocaleString()}</p>
         </Card>
-
-        <Card className="p-5 sm:p-6">
-          <div className="text-3xl mb-3 inline-flex items-center justify-center w-12 h-12 rounded-xl" style={{ background: 'rgba(59,130,246,0.1)' }}>💬</div>
-          <h3 className="font-medium text-sm" style={{ color: 'var(--text-secondary)' }}>Conversations</h3>
-          <p className="text-2xl sm:text-3xl font-bold mt-1" style={{ color: 'var(--text-primary)' }}>{stats?.conversations ?? 0}</p>
+        <Card className="p-6 rounded-[2rem] shadow-sm hover:scale-[1.02] transition-transform">
+          <div className="flex justify-between items-start mb-4">
+            <h3 className="text-[var(--text-secondary)] font-semibold text-sm uppercase tracking-wider">Conversations</h3>
+            <div className="text-[var(--accent-blue)]"><MessageCircle size={28} /></div>
+          </div>
+          <p className="text-4xl font-black">{stats?.conversations ?? 0}</p>
         </Card>
-
-        <Card className="p-5 sm:p-6">
-          <div className="text-3xl mb-3 inline-flex items-center justify-center w-12 h-12 rounded-xl" style={{ background: 'rgba(16,185,129,0.1)' }}>📚</div>
-          <h3 className="font-medium text-sm" style={{ color: 'var(--text-secondary)' }}>Vocabulary</h3>
-          <p className="text-2xl sm:text-3xl font-bold mt-1" style={{ color: 'var(--text-primary)' }}>{stats?.vocabularyWords ?? 0} words</p>
+        <Card className="p-6 rounded-[2rem] shadow-sm hover:scale-[1.02] transition-transform">
+          <div className="flex justify-between items-start mb-4">
+            <h3 className="text-[var(--text-secondary)] font-semibold text-sm uppercase tracking-wider">Words Mastered</h3>
+            <div className="text-[var(--accent-emerald)]"><Library size={28} /></div>
+          </div>
+          <p className="text-4xl font-black">{stats?.vocabularyWords ?? 0}</p>
         </Card>
-
-        <Card className="p-5 sm:p-6">
-          <div className="text-3xl mb-3 inline-flex items-center justify-center w-12 h-12 rounded-xl" style={{ background: 'rgba(99,102,241,0.1)' }}>✍️</div>
-          <h3 className="font-medium text-sm" style={{ color: 'var(--text-secondary)' }}>Essays Written</h3>
-          <p className="text-2xl sm:text-3xl font-bold mt-1" style={{ color: 'var(--text-primary)' }}>{stats?.writingSubmissions ?? 0}</p>
+        <Card className="p-6 rounded-[2rem] shadow-sm hover:scale-[1.02] transition-transform">
+          <div className="flex justify-between items-start mb-4">
+            <h3 className="text-[var(--text-secondary)] font-semibold text-sm uppercase tracking-wider">Essays</h3>
+            <div className="text-[var(--accent-indigo)]"><PenTool size={28} /></div>
+          </div>
+          <p className="text-4xl font-black">{stats?.writingSubmissions ?? 0}</p>
         </Card>
       </div>
 
-      {/* XP Progress Bar */}
+      {/* LEVEL PROGRESS */}
       {stats?.levelProgress?.nextLevel && (
-        <Card className="p-5 sm:p-6">
-          <div className="flex justify-between items-center mb-3">
-            <h3 className="font-semibold text-sm" style={{ color: 'var(--text-primary)' }}>
-              Progress to {stats.levelProgress.nextLevel}
-            </h3>
-            <span className="text-xs font-medium" style={{ color: 'var(--text-muted)' }}>
-              {stats.levelProgress.xpCurrent.toLocaleString()} / {stats.levelProgress.xpForNext.toLocaleString()} XP
-            </span>
+        <Card className="p-8 rounded-[2.5rem] shadow-md border-0" style={{ background: 'linear-gradient(135deg, var(--accent-violet) 0%, var(--accent-indigo) 100%)', color: '#ffffff' }}>
+          <div className="flex flex-col md:flex-row justify-between items-end mb-6 gap-4">
+            <div>
+              <h2 className="text-3xl font-extrabold mb-1">Level Up Progress</h2>
+              <p className="opacity-80 font-medium">Reaching for {stats.levelProgress.nextLevel}</p>
+            </div>
+            <div className="text-right">
+              <span className="text-2xl font-bold">{stats.levelProgress.progress}%</span>
+            </div>
           </div>
-          <div className="w-full rounded-full h-3 overflow-hidden" style={{ background: 'var(--bg-input)' }}>
+          <div className="w-full h-4 rounded-full overflow-hidden bg-white/20 relative">
             <div
-              className="h-full rounded-full transition-all duration-700 ease-out"
+              className="absolute top-0 left-0 h-full rounded-full transition-all duration-1000 ease-out"
               style={{
                 width: `${stats.levelProgress.progress}%`,
-                background: 'linear-gradient(to right, var(--accent-blue), var(--accent-violet))',
-                minWidth: stats.levelProgress.progress > 0 ? '8px' : '0',
+                background: 'var(--accent-emerald)',
               }}
             />
           </div>
-          <p className="text-xs mt-2" style={{ color: 'var(--text-muted)' }}>
-            {stats.levelProgress.progress}% complete — {(stats.levelProgress.xpForNext - stats.levelProgress.xpCurrent).toLocaleString()} XP to go
-          </p>
+          <div className="mt-4 flex justify-between font-semibold text-sm opacity-80">
+            <span>{stats.levelProgress.xpCurrent.toLocaleString()} XP</span>
+            <span>{stats.levelProgress.xpForNext.toLocaleString()} XP</span>
+          </div>
         </Card>
       )}
 
-      {/* Score Breakdown + Recent Activity */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Score Breakdown Chart */}
-        <Card className="p-5 sm:p-6">
-          <h3 className="font-bold text-base mb-5" style={{ color: 'var(--text-primary)' }}>XP Breakdown</h3>
-          <div className="space-y-3">
+      {/* CHARTS & ACTIVITY */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 lg:gap-8">
+        {/* XP Breakdown */}
+        <Card className="p-6 md:p-8 rounded-[2rem]">
+          <h3 className="text-xl font-bold mb-6">XP Breakdown</h3>
+          <div className="space-y-5">
             {breakdownTypes.map(type => {
-              const data = stats?.scoreBreakdown?.[type];
-              const total = data?.total || 0;
+              const total = stats?.scoreBreakdown?.[type]?.total || 0;
               const pct = maxBreakdown > 0 ? (total / maxBreakdown) * 100 : 0;
               return (
-                <div key={type} className="flex items-center gap-3">
-                  <span className="text-lg w-7 text-center">{typeIcons[type]}</span>
-                  <span className="text-sm font-medium capitalize w-20" style={{ color: 'var(--text-secondary)' }}>{type}</span>
-                  <div className="flex-1 rounded-full h-2.5 overflow-hidden" style={{ background: 'var(--bg-input)' }}>
-                    <div
-                      className="h-full rounded-full transition-all duration-500"
-                      style={{ width: `${pct}%`, background: typeColors[type]?.replace('0.15', '0.6') || 'var(--accent-blue)', minWidth: total > 0 ? '4px' : '0' }}
-                    />
+                <div key={type} className="flex items-center gap-4">
+                  <div className="w-8 flex justify-center text-[var(--accent-indigo)]">{typeIcons[type]}</div>
+                  <span className="text-[15px] font-semibold capitalize w-24 text-[var(--text-secondary)]">{type}</span>
+                  <div className="flex-1 h-3 rounded-full overflow-hidden bg-[var(--bg-input)]">
+                    <div className="h-full rounded-full bg-[var(--accent-indigo)]" style={{ width: `${pct}%`, minWidth: total > 0 ? '8px' : '0' }} />
                   </div>
-                  <span className="text-xs font-semibold w-14 text-right" style={{ color: 'var(--text-primary)' }}>{total.toLocaleString()}</span>
+                  <span className="text-sm font-bold w-12 text-right">{total}</span>
                 </div>
               );
             })}
           </div>
-          {Object.keys(stats?.scoreBreakdown || {}).length === 0 && (
-            <p className="text-sm text-center mt-4" style={{ color: 'var(--text-muted)' }}>Complete activities to see your breakdown</p>
-          )}
         </Card>
 
-        {/* Recent Activity */}
-        <Card className="p-5 sm:p-6">
-          <h3 className="font-bold text-base mb-5" style={{ color: 'var(--text-primary)' }}>Recent Activity</h3>
-          {(!stats?.recentActivity || stats.recentActivity.length === 0) ? (
-            <div className="text-center py-8" style={{ color: 'var(--text-muted)' }}>
-              <span className="text-4xl block mb-2">📋</span>
-              <p className="text-sm">Start learning to see your activity here</p>
+        {/* Activity Feed */}
+        <Card className="p-6 md:p-8 rounded-[2rem] flex flex-col">
+          <h3 className="text-xl font-bold mb-6">Recent Activity</h3>
+          {!stats?.recentActivity?.length ? (
+            <div className="flex-1 flex flex-col items-center justify-center text-[var(--text-muted)] py-10">
+              <div className="mb-4 opacity-50"><MessageCircle size={48} /></div>
+              <p className="font-medium">No activity yet. Time to learn!</p>
             </div>
           ) : (
-            <div className="space-y-2 max-h-[300px] overflow-y-auto pr-1">
+            <div className="space-y-3 overflow-y-auto max-h-[300px] pr-2">
               {stats.recentActivity.map(event => (
-                <div key={event.id} className="flex items-center gap-3 p-2.5 rounded-xl transition-colors" style={{ background: typeColors[event.type] || 'var(--bg-input)' }}>
-                  <span className="text-base">{typeIcons[event.type] || '⭐'}</span>
+                <div key={event.id} className="flex items-center gap-4 p-4 rounded-2xl bg-[var(--bg-input)] hover:bg-[var(--border-subtle)] transition-colors">
+                  <div className="text-[var(--accent-indigo)]">{typeIcons[event.type] || <Sparkles size={24} />}</div>
                   <div className="flex-1 min-w-0">
-                    <p className="text-sm truncate" style={{ color: 'var(--text-primary)' }}>{event.details || event.type}</p>
-                    <p className="text-xs" style={{ color: 'var(--text-muted)' }}>{timeAgo(event.createdAt)}</p>
+                    <p className="font-semibold text-[15px] truncate text-[var(--text-primary)]">{event.details || event.type}</p>
+                    <p className="text-xs font-medium text-[var(--text-muted)] mt-0.5">{timeAgo(event.createdAt)}</p>
                   </div>
                   {event.points > 0 && (
-                    <span className="text-xs font-bold shrink-0 px-2 py-1 rounded-lg" style={{ background: 'rgba(59,130,246,0.1)', color: 'var(--accent-blue)' }}>+{event.points} XP</span>
+                    <span className="font-bold text-sm text-[var(--accent-emerald)] bg-[var(--accent-emerald)]/10 px-3 py-1.5 rounded-xl">
+                      +{event.points} XP
+                    </span>
                   )}
                 </div>
               ))}
@@ -238,54 +217,53 @@ export default function DashboardPage() {
         </Card>
       </div>
 
-      {/* Continue Learning */}
-      <h2 className="text-xl sm:text-2xl font-bold pt-4" style={{ color: 'var(--text-primary)' }}>Continue Learning</h2>
-      
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
-        <Link href="/chat" className="group block">
-          <Card className="p-5 sm:p-6 h-full transition-all duration-300 hover:shadow-lg hover:shadow-blue-500/5" style={{ boxShadow: '0 0 0 transparent' }}>
-            <h3 className="text-lg sm:text-xl font-bold mb-2 group-hover:opacity-80 transition-colors" style={{ color: 'var(--accent-blue)' }}>Chat Tutor</h3>
-            <p style={{ color: 'var(--text-secondary)' }} className="text-sm sm:text-base">Practice your English conversation skills with our AI tutor. Get instant grammar corrections.</p>
-            <div className="mt-4 flex items-center gap-1 text-sm font-medium opacity-0 group-hover:opacity-100 transition-opacity duration-200" style={{ color: 'var(--accent-blue)' }}>
-              Start practicing
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" /></svg>
-            </div>
-          </Card>
-        </Link>
-        
-        <Link href="/writing" className="group block">
-          <Card className="p-5 sm:p-6 h-full transition-all duration-300 hover:shadow-lg hover:shadow-indigo-500/5" style={{ boxShadow: '0 0 0 transparent' }}>
-            <h3 className="text-lg sm:text-xl font-bold mb-2 group-hover:opacity-80 transition-colors" style={{ color: 'var(--accent-indigo)' }}>Writing Practice</h3>
-            <p style={{ color: 'var(--text-secondary)' }} className="text-sm sm:text-base">Write an essay or a short paragraph and receive detailed feedback on style, tone, and grammar.</p>
-            <div className="mt-4 flex items-center gap-1 text-sm font-medium opacity-0 group-hover:opacity-100 transition-opacity duration-200" style={{ color: 'var(--accent-indigo)' }}>
-              Start writing
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" /></svg>
-            </div>
-          </Card>
-        </Link>
-
-        <Link href="/reading" className="group block">
-          <Card className="p-5 sm:p-6 h-full transition-all duration-300 hover:shadow-lg hover:shadow-emerald-500/5" style={{ boxShadow: '0 0 0 transparent' }}>
-            <h3 className="text-lg sm:text-xl font-bold mb-2 group-hover:opacity-80 transition-colors" style={{ color: 'var(--accent-emerald)' }}>Reading Practice</h3>
-            <p style={{ color: 'var(--text-secondary)' }} className="text-sm sm:text-base">Read articles tailored to your CEFR level and test your comprehension with quiz questions.</p>
-            <div className="mt-4 flex items-center gap-1 text-sm font-medium opacity-0 group-hover:opacity-100 transition-opacity duration-200" style={{ color: 'var(--accent-emerald)' }}>
-              Start reading
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" /></svg>
-            </div>
-          </Card>
-        </Link>
-
-        <Link href="/vocabulary" className="group block">
-          <Card className="p-5 sm:p-6 h-full transition-all duration-300 hover:shadow-lg hover:shadow-violet-500/5" style={{ boxShadow: '0 0 0 transparent' }}>
-            <h3 className="text-lg sm:text-xl font-bold mb-2 group-hover:opacity-80 transition-colors" style={{ color: 'var(--accent-violet)' }}>Vocabulary</h3>
-            <p style={{ color: 'var(--text-secondary)' }} className="text-sm sm:text-base">Build your personal word bank and review definitions with context sentences.</p>
-            <div className="mt-4 flex items-center gap-1 text-sm font-medium opacity-0 group-hover:opacity-100 transition-opacity duration-200" style={{ color: 'var(--accent-violet)' }}>
-              Review words
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" /></svg>
-            </div>
-          </Card>
-        </Link>
+      {/* QUICK ACTIONS */}
+      <div className="pt-6">
+        <h2 className="text-2xl font-bold mb-6">Continue Learning</h2>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
+          <Link href="/chat" className="block group">
+            <Card className="p-6 rounded-[2rem] h-full flex flex-col border-[var(--border-subtle)] hover:border-[var(--accent-blue)] transition-colors">
+              <div className="mb-4 text-[var(--accent-blue)] group-hover:scale-110 transition-transform origin-left"><MessageCircle size={36} /></div>
+              <h3 className="text-lg font-bold mb-2">Chat Tutor</h3>
+              <p className="text-sm text-[var(--text-secondary)] font-medium mb-6 flex-1">Practice free-flowing conversation with AI.</p>
+              <div className="text-[var(--accent-blue)] font-bold text-sm flex items-center gap-1 group-hover:gap-2 transition-all">
+                Start Chatting &rarr;
+              </div>
+            </Card>
+          </Link>
+          <Link href="/writing" className="block group">
+            <Card className="p-6 rounded-[2rem] h-full flex flex-col border-[var(--border-subtle)] hover:border-[var(--accent-indigo)] transition-colors">
+              <div className="mb-4 text-[var(--accent-indigo)] group-hover:scale-110 transition-transform origin-left"><PenTool size={36} /></div>
+              <h3 className="text-lg font-bold mb-2">Writing</h3>
+              <p className="text-sm text-[var(--text-secondary)] font-medium mb-6 flex-1">Get precise feedback on your essays.</p>
+              <div className="text-[var(--accent-indigo)] font-bold text-sm flex items-center gap-1 group-hover:gap-2 transition-all">
+                Write Essay &rarr;
+              </div>
+            </Card>
+          </Link>
+          <Link href="/reading" className="block group">
+            <Card className="p-6 rounded-[2rem] h-full flex flex-col border-[var(--border-subtle)] hover:border-[var(--accent-emerald)] transition-colors">
+              <div className="mb-4 text-[var(--accent-emerald)] group-hover:scale-110 transition-transform origin-left"><BookOpen size={36} /></div>
+              <h3 className="text-lg font-bold mb-2">Reading</h3>
+              <p className="text-sm text-[var(--text-secondary)] font-medium mb-6 flex-1">Read leveled articles & take quizzes.</p>
+              <div className="text-[var(--accent-emerald)] font-bold text-sm flex items-center gap-1 group-hover:gap-2 transition-all">
+                Start Reading &rarr;
+              </div>
+            </Card>
+          </Link>
+          <Link href="/vocabulary" className="block group">
+            <Card className="p-6 rounded-[2rem] h-full flex flex-col border-[var(--border-subtle)] hover:border-[var(--accent-amber)] transition-colors">
+              <div className="mb-4 text-[var(--accent-amber)] group-hover:scale-110 transition-transform origin-left"><Library size={36} /></div>
+              <h3 className="text-lg font-bold mb-2">Vocabulary</h3>
+              <p className="text-sm text-[var(--text-secondary)] font-medium mb-6 flex-1">Review your personal word bank.</p>
+              <div className="text-[var(--accent-amber)] font-bold text-sm flex items-center gap-1 group-hover:gap-2 transition-all">
+                Study Words &rarr;
+              </div>
+            </Card>
+          </Link>
+        </div>
       </div>
+
     </div>
   );
 }

@@ -1,6 +1,6 @@
 import { streamText, generateObject } from 'ai';
 import { z } from 'zod';
-import { model } from './config';
+import { model, fallbackModel } from './config';
 
 // Pre-defined schemas — allocated once at module load, not per-request
 const writingFeedbackSchema = z.object({
@@ -59,21 +59,43 @@ function checkRateLimit(): boolean {
 }
 
 /**
+ * Determines whether an error is a rate-limit or quota exhaustion error.
+ */
+function isRateLimitError(error: any): boolean {
+  if (!error) return false;
+  const msg = (error?.message || '').toLowerCase();
+  const status = error?.status || error?.statusCode || error?.response?.status;
+  return (
+    msg.includes('rate') ||
+    msg.includes('quota') ||
+    msg.includes('429') ||
+    msg.includes('resource_exhausted') ||
+    status === 429
+  );
+}
+
+/**
  * AI Service Layer
- * Abstracts the provider (Gemini 2.5 Flash) from the route logic.
+ * Abstracts the provider (Gemini 2.5 Flash primary, Groq fallback) from the route logic.
  * 
  * Key: maxRetries is set to 0 everywhere to prevent the AI SDK from
  * auto-retrying on 429/503 — on a free-tier API key every retry counts
  * against the quota and causes a cascade of failures.
+ * 
+ * When Gemini is rate limited (either by our local limiter or by Google's API),
+ * the service automatically falls back to Groq.
  */
 export class AIService {
   static async getChatStream(messages: any[], systemPrompt: string, onFinish?: (completion: string) => Promise<void>) {
-    if (!checkRateLimit()) {
-      throw new Error('RATE_LIMITED');
-    }
+    const isGeminiLimited = !checkRateLimit();
+
+    // Choose model: fallback to Groq if Gemini is rate-limited
+    const activeModel = isGeminiLimited ? fallbackModel : model;
+    const provider = isGeminiLimited ? 'groq' : 'gemini';
+
     try {
       const result = streamText({
-        model,
+        model: activeModel,
         system: systemPrompt,
         messages,
         maxRetries: 0,
@@ -83,27 +105,67 @@ export class AIService {
           }
         }
       });
+      if (provider === 'groq') console.log('[AI Fallback] Using Groq for chat stream');
       return result.toDataStreamResponse();
-    } catch (error) {
+    } catch (error: any) {
+      // If Gemini failed with rate limit, retry once with Groq
+      if (provider === 'gemini' && isRateLimitError(error)) {
+        console.log('[AI Fallback] Gemini rate-limited, falling back to Groq for chat');
+        try {
+          const result = streamText({
+            model: fallbackModel,
+            system: systemPrompt,
+            messages,
+            maxRetries: 0,
+            onFinish: async ({ text }) => {
+              if (onFinish) {
+                await onFinish(text);
+              }
+            }
+          });
+          return result.toDataStreamResponse();
+        } catch (groqError) {
+          console.error('AIService Groq Fallback Chat Error:', groqError);
+          throw new Error('Failed to generate chat stream (both providers failed)');
+        }
+      }
       console.error('AIService Chat Error:', error);
       throw new Error('Failed to generate chat stream');
     }
   }
 
   static async analyzeText(text: string) {
-    if (!checkRateLimit()) {
-      throw new Error('RATE_LIMITED');
-    }
+    const isGeminiLimited = !checkRateLimit();
+    const activeModel = isGeminiLimited ? fallbackModel : model;
+    const provider = isGeminiLimited ? 'groq' : 'gemini';
+
     try {
+      if (provider === 'groq') console.log('[AI Fallback] Using Groq for text analysis');
       const result = await generateObject({
-        model,
+        model: activeModel,
         schema: writingFeedbackSchema,
         system: ANALYSIS_SYSTEM_PROMPT,
         prompt: `Analyze the following text written by an English learner:\n\n"${text}"`,
         maxRetries: 0,
       });
       return result.object;
-    } catch (error) {
+    } catch (error: any) {
+      if (provider === 'gemini' && isRateLimitError(error)) {
+        console.log('[AI Fallback] Gemini rate-limited, falling back to Groq for analysis');
+        try {
+          const result = await generateObject({
+            model: fallbackModel,
+            schema: writingFeedbackSchema,
+            system: ANALYSIS_SYSTEM_PROMPT,
+            prompt: `Analyze the following text written by an English learner:\n\n"${text}"`,
+            maxRetries: 0,
+          });
+          return result.object;
+        } catch (groqError) {
+          console.error('AIService Groq Fallback Analysis Error:', groqError);
+          throw new Error('Failed to analyze text (both providers failed)');
+        }
+      }
       console.error('AIService Analysis Error:', error);
       throw new Error('Failed to analyze text');
     }
@@ -115,23 +177,44 @@ export class AIService {
    * @param avoidTitles - Titles already in the DB to avoid repeating topics
    */
   static async generateReadingPassage(level: string, avoidTitles: string[] = []) {
-    if (!checkRateLimit()) {
-      throw new Error('RATE_LIMITED');
-    }
+    const isGeminiLimited = !checkRateLimit();
+    const activeModel = isGeminiLimited ? fallbackModel : model;
+    const provider = isGeminiLimited ? 'groq' : 'gemini';
+
     try {
       const avoidClause = avoidTitles.length > 0
         ? `\n\nDo NOT use any of these topics or titles (already used): ${avoidTitles.join(', ')}`
         : '';
 
+      if (provider === 'groq') console.log('[AI Fallback] Using Groq for reading passage generation');
       const result = await generateObject({
-        model,
+        model: activeModel,
         schema: readingPassageSchema,
         system: READING_SYSTEM_PROMPT,
         prompt: `Generate a new reading comprehension passage for CEFR level ${level}. Choose a fresh, interesting topic.${avoidClause}`,
         maxRetries: 0,
       });
       return result.object;
-    } catch (error) {
+    } catch (error: any) {
+      if (provider === 'gemini' && isRateLimitError(error)) {
+        console.log('[AI Fallback] Gemini rate-limited, falling back to Groq for reading passage');
+        try {
+          const avoidClause = avoidTitles.length > 0
+            ? `\n\nDo NOT use any of these topics or titles (already used): ${avoidTitles.join(', ')}`
+            : '';
+          const result = await generateObject({
+            model: fallbackModel,
+            schema: readingPassageSchema,
+            system: READING_SYSTEM_PROMPT,
+            prompt: `Generate a new reading comprehension passage for CEFR level ${level}. Choose a fresh, interesting topic.${avoidClause}`,
+            maxRetries: 0,
+          });
+          return result.object;
+        } catch (groqError) {
+          console.error('AIService Groq Fallback Reading Error:', groqError);
+          throw new Error('Failed to generate reading passage (both providers failed)');
+        }
+      }
       console.error('AIService Reading Generation Error:', error);
       throw new Error('Failed to generate reading passage');
     }

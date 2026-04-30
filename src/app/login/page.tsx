@@ -6,6 +6,7 @@ import Link from 'next/link';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 import { Card } from '@/components/ui/Card';
+import { Hand, CheckCircle } from 'lucide-react';
 
 export default function LoginPage() {
   const router = useRouter();
@@ -39,29 +40,28 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center p-4 relative">
-      {/* Background decorative elements */}
-      <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute top-1/4 left-1/4 w-72 sm:w-96 h-72 sm:h-96 rounded-full blur-3xl" style={{ background: 'rgba(59,130,246,0.1)' }}></div>
-        <div className="absolute bottom-1/4 right-1/4 w-72 sm:w-96 h-72 sm:h-96 rounded-full blur-3xl" style={{ background: 'rgba(139,92,246,0.1)' }}></div>
+    <div className="min-h-[85vh] flex items-center justify-center p-4 relative page-animate">
+      {/* Background glow */}
+      <div className="absolute inset-0 overflow-hidden pointer-events-none -z-10">
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] bg-[var(--accent-blue)] opacity-[0.03] rounded-full blur-[100px]" />
       </div>
 
-      <Card className="w-full max-w-md p-6 sm:p-8 shadow-2xl relative z-10">
-        <div className="text-center mb-6 sm:mb-8">
-          <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl mb-4 text-3xl" style={{ background: 'linear-gradient(to bottom right, rgba(59,130,246,0.2), rgba(99,102,241,0.2))', border: '1px solid rgba(59,130,246,0.2)' }}>
-            🚀
+      <Card className="w-full max-w-[440px] p-8 sm:p-10 shadow-2xl rounded-[2.5rem] relative z-10 border-[var(--border-subtle)]">
+        <div className="text-center mb-10">
+          <div className="inline-flex items-center justify-center w-20 h-20 rounded-[1.5rem] mb-6 bg-[var(--accent-blue)]/10 text-[var(--accent-blue)] shadow-inner">
+            <Hand size={32} />
           </div>
-          <h1 className="text-2xl sm:text-3xl font-bold mb-2" style={{ color: 'var(--text-primary)' }}>Welcome Back</h1>
-          <p style={{ color: 'var(--text-secondary)' }}>Sign in to continue your English journey</p>
+          <h1 className="text-3xl font-extrabold mb-2 tracking-tight" style={{ color: 'var(--text-primary)' }}>Welcome Back</h1>
+          <p className="font-medium" style={{ color: 'var(--text-secondary)' }}>Sign in to continue learning</p>
         </div>
 
         {justRegistered && (
-          <div className="p-3 rounded-xl text-sm mb-5 flex items-center gap-2" style={{ background: 'rgba(16,185,129,0.1)', color: 'var(--accent-emerald)', border: '1px solid rgba(16,185,129,0.2)' }}>
-            <span>✅</span> Account created successfully! Sign in to start learning.
+          <div className="p-4 rounded-2xl text-[15px] font-semibold mb-6 flex items-center gap-3 bg-[var(--accent-emerald)]/10 text-[var(--accent-emerald)] border border-[var(--accent-emerald)]/20">
+            <CheckCircle size={20} /> Account created successfully!
           </div>
         )}
 
-        <form onSubmit={handleSubmit} className="space-y-5">
+        <form onSubmit={handleSubmit} className="space-y-6">
           <Input
             label="Email Address"
             type="email"
@@ -71,6 +71,7 @@ export default function LoginPage() {
             onChange={(e) => setEmail(e.target.value)}
             required
             placeholder="you@example.com"
+            className="h-14 rounded-2xl bg-[var(--bg-input)] border-transparent focus:bg-[var(--bg-primary)] focus:border-[var(--accent-blue)]"
           />
           <div className="relative">
             <Input
@@ -82,11 +83,12 @@ export default function LoginPage() {
               onChange={(e) => setPassword(e.target.value)}
               required
               placeholder="••••••••"
+              className="h-14 rounded-2xl bg-[var(--bg-input)] border-transparent focus:bg-[var(--bg-primary)] focus:border-[var(--accent-blue)]"
             />
             <button
               type="button"
               onClick={() => setShowPassword(!showPassword)}
-              className="absolute right-3 top-[38px] p-1 rounded-md transition-colors duration-150"
+              className="absolute right-4 top-[44px] p-1.5 rounded-lg transition-colors duration-150 hover:bg-[var(--bg-card)]"
               style={{ color: 'var(--text-muted)' }}
               aria-label={showPassword ? 'Hide password' : 'Show password'}
               tabIndex={-1}
@@ -100,19 +102,19 @@ export default function LoginPage() {
           </div>
           
           {error && (
-            <div className="p-3 rounded-xl text-sm" role="alert" style={{ background: 'rgba(239,68,68,0.1)', color: 'var(--accent-red)', border: '1px solid rgba(239,68,68,0.2)' }}>
+            <div className="p-4 rounded-2xl text-[15px] font-semibold bg-[var(--accent-red)]/10 text-[var(--accent-red)] border border-[var(--accent-red)]/20">
               {error}
             </div>
           )}
 
-          <Button type="submit" className="w-full" size="lg" isLoading={loading}>
-            Sign In
+          <Button type="submit" className="w-full h-14 rounded-2xl font-bold text-[17px] shadow-lg shadow-[var(--accent-blue)]/20 hover:shadow-[var(--accent-blue)]/30 hover:-translate-y-0.5 transition-all" isLoading={loading}>
+            Sign In &rarr;
           </Button>
         </form>
 
-        <p className="text-center text-sm mt-6" style={{ color: 'var(--text-muted)' }}>
+        <p className="text-center font-medium mt-8" style={{ color: 'var(--text-muted)' }}>
           Don&apos;t have an account?{' '}
-          <Link href="/register" className="font-medium transition-colors hover:underline" style={{ color: 'var(--accent-blue)' }}>
+          <Link href="/register" className="font-bold transition-colors hover:underline" style={{ color: 'var(--accent-blue)' }}>
             Sign up
           </Link>
         </p>

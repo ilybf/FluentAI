@@ -4,6 +4,7 @@ import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { AuthProvider } from '@/components/providers/AuthProvider';
 import { ThemeProvider } from '@/components/providers/ThemeProvider';
+import { Toaster } from 'react-hot-toast';
 
 export const metadata = {
   title: 'FluentAI | English Learning',
@@ -35,25 +36,29 @@ export default async function RootLayout({
           margin: 0,
         }}
       >
-        <a href="#main-content" className="skip-to-content">
-          Skip to content
-        </a>
         <AuthProvider>
           <ThemeProvider>
             {session && <Sidebar user={session.user} />}
             <main 
-              id="main-content" 
               className="flex-1 flex flex-col min-w-0"
               style={{ minHeight: '100dvh' }}
             >
-              <div className="flex-1 overflow-auto page-animate flex flex-col">
-                {/* Mobile spacer: pushes content below the fixed header, but scrolls with the content */}
+              <div className="flex-1 overflow-y-auto overflow-x-hidden page-animate flex flex-col scroll-smooth">
+                {/* Mobile spacer */}
                 <div className="md:hidden shrink-0 w-full" style={{ height: '72px' }} />
-                <div className="p-4 md:p-8 flex-1 flex flex-col">
+                <div className="p-4 md:p-8 flex-1 flex flex-col max-w-[1400px] w-full mx-auto">
                   {children}
                 </div>
               </div>
             </main>
+            <Toaster position="top-center" toastOptions={{
+              style: {
+                background: 'var(--bg-card)',
+                color: 'var(--text-primary)',
+                border: '1px solid var(--border-subtle)',
+                borderRadius: '1rem',
+              }
+            }} />
           </ThemeProvider>
         </AuthProvider>
       </body>

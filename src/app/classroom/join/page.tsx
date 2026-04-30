@@ -4,6 +4,7 @@ import { Card } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 import Link from 'next/link';
+import { GraduationCap, CheckCircle, AlertTriangle } from 'lucide-react';
 
 export default function JoinClassroomPage() {
   const [joinCode, setJoinCode] = useState('');
@@ -43,8 +44,8 @@ export default function JoinClassroomPage() {
         <div className="absolute -bottom-20 -left-20 w-48 h-48 rounded-full blur-3xl" style={{ background: 'rgba(139,92,246,0.08)' }} />
 
         <div className="text-center mb-6 relative z-10">
-          <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl mb-4 text-3xl" style={{ background: 'linear-gradient(to bottom right, rgba(59,130,246,0.2), rgba(99,102,241,0.2))', border: '1px solid rgba(59,130,246,0.2)' }}>
-            🎓
+          <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl mb-4 text-[var(--accent-blue)]" style={{ background: 'linear-gradient(to bottom right, rgba(59,130,246,0.2), rgba(99,102,241,0.2))', border: '1px solid rgba(59,130,246,0.2)' }}>
+            <GraduationCap size={32} />
           </div>
           <h1 className="text-2xl sm:text-3xl font-bold mb-2" style={{ color: 'var(--text-primary)' }}>Join a Classroom</h1>
           <p style={{ color: 'var(--text-secondary)' }}>Enter the 6-character code your teacher gave you.</p>
@@ -56,7 +57,10 @@ export default function JoinClassroomPage() {
             color: result.success ? 'var(--accent-emerald-text)' : 'var(--accent-red)',
             border: `1px solid ${result.success ? 'rgba(16,185,129,0.2)' : 'rgba(239,68,68,0.2)'}`,
           }}>
-            {result.success ? '✅' : '⚠️'} {result.message}
+            <div className="flex items-center gap-2">
+              {result.success ? <CheckCircle size={16} /> : <AlertTriangle size={16} />} 
+              <span>{result.message}</span>
+            </div>
           </div>
         )}
 

@@ -3,6 +3,7 @@ import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import dbConnect from '@/lib/db/mongoose';
 import { ReadingPassage } from '@/models/ReadingPassage';
+import { User } from '@/models/User';
 import { AIService } from '@/lib/ai/service';
 import { awardXP, awardStreakBonus, XP } from '@/lib/scoring';
 
@@ -69,6 +70,7 @@ const seedPassages = [
 
 /**
  * Auto-seeds one passage per level if DB is empty. Only runs once.
+ * Also kicks off async background tasks to ensure 8 passages per level.
  */
 async function ensurePassagesExist() {
   const count = await ReadingPassage.countDocuments();
@@ -76,6 +78,41 @@ async function ensurePassagesExist() {
     console.log('Reading DB empty — seeding initial passages...');
     await ReadingPassage.insertMany(seedPassages);
     console.log('Seed complete: 6 passages inserted.');
+  }
+
+  // Backfill passages to ensure there are at least 8 per level
+  const levels = ['A1', 'A2', 'B1', 'B2', 'C1', 'C2'];
+  for (const lvl of levels) {
+    const lvlCount = await ReadingPassage.countDocuments({ level: lvl });
+    if (lvlCount < 8) {
+      // Don't await, let it generate in background to avoid blocking the response
+      backfillLevel(lvl, 8 - lvlCount).catch(err => console.error(`Failed backfill for ${lvl}:`, err));
+    }
+  }
+}
+
+async function backfillLevel(level: string, needed: number) {
+  // Add a small delay so we don't spam the API immediately
+  await new Promise(resolve => setTimeout(resolve, 1500));
+  
+  for (let i = 0; i < Math.min(needed, 4); i++) { // Generate up to 4 at a time (Groq fallback helps avoid limits)
+    const existingTitles = await ReadingPassage.find({ level }).select('title').lean();
+    const avoidTitles = existingTitles.map((p: any) => p.title);
+    try {
+      const generated = await AIService.generateReadingPassage(level, avoidTitles);
+      await ReadingPassage.create({
+        title: generated.title,
+        content: generated.content,
+        level,
+        questions: generated.questions,
+      });
+      console.log(`Backfilled 1 passage for ${level}`);
+      // Sleep between requests
+      await new Promise(resolve => setTimeout(resolve, 1500));
+    } catch (e) {
+      console.error(`AI generation failed during backfill for ${level}`, e);
+      break;
+    }
   }
 }
 
@@ -98,7 +135,9 @@ export async function GET(req: NextRequest) {
     if (level) {
       filter = { level };
     } else {
-      const userLevel = (session as any).user?.level || 'A1';
+      // Read the user's current level from the DB (authoritative after level-ups)
+      const dbUser = await User.findById(session.user.id).select('level').lean();
+      const userLevel = dbUser?.level || (session as any).user?.level || 'A1';
       const levelOrder = ['A1', 'A2', 'B1', 'B2', 'C1', 'C2'];
       const idx = levelOrder.indexOf(userLevel);
       const allowedLevels = [userLevel];

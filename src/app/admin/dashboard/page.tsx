@@ -3,6 +3,8 @@ import { useState, useEffect } from 'react';
 import { Card } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
+import toast from 'react-hot-toast';
+import { Settings, BarChart2, Users, School, Sparkles, GraduationCap, UserCog, Search, AlertTriangle, RefreshCw, Trash2, X } from 'lucide-react';
 
 type UserData = {
   id: string; email: string; displayName: string; role: string;
@@ -26,12 +28,12 @@ type Tab = 'overview' | 'users' | 'classrooms';
 
 function AdminSkeleton() {
   return (
-    <div className="max-w-6xl mx-auto space-y-8">
-      <div><div className="skeleton h-8 w-52 mb-2" /><div className="skeleton h-4 w-64" /></div>
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-        {[...Array(4)].map((_, i) => <Card key={i} className="p-6"><div className="skeleton h-4 w-16 mb-3" /><div className="skeleton h-8 w-12" /></Card>)}
+    <div className="max-w-6xl mx-auto space-y-8 page-animate">
+      <div><div className="skeleton h-10 w-64 mb-3" /><div className="skeleton h-5 w-80" /></div>
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-6">
+        {[...Array(4)].map((_, i) => <Card key={i} className="p-8 rounded-[2rem]"><div className="skeleton h-5 w-20 mb-3" /><div className="skeleton h-10 w-16" /></Card>)}
       </div>
-      <Card className="p-6">{[...Array(5)].map((_, i) => <div key={i} className="skeleton h-14 w-full mb-3 rounded-xl" />)}</Card>
+      <Card className="p-8 rounded-[2.5rem]">{[...Array(5)].map((_, i) => <div key={i} className="skeleton h-16 w-full mb-4 rounded-xl" />)}</Card>
     </div>
   );
 }
@@ -42,8 +44,6 @@ export default function AdminDashboardPage() {
   const [classrooms, setClassrooms] = useState<ClassroomData[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
-  const [msg, setMsg] = useState('');
-  const [msgType, setMsgType] = useState<'success' | 'error'>('success');
 
   // Edit user modal state
   const [editingUser, setEditingUser] = useState<UserData | null>(null);
@@ -79,8 +79,8 @@ export default function AdminDashboardPage() {
   };
 
   const showMsg = (text: string, type: 'success' | 'error') => {
-    setMsg(text); setMsgType(type);
-    setTimeout(() => setMsg(''), 4000);
+    if (type === 'success') toast.success(text);
+    else toast.error(text);
   };
 
   // ─── User Actions ──────────────────────────────────────────
@@ -99,8 +99,7 @@ export default function AdminDashboardPage() {
     } catch (err: any) { showMsg(err.message, 'error'); }
   };
 
-  const deleteUser = async (userId: string, name: string) => {
-    if (!confirm(`Delete "${name}"? This cannot be undone.`)) return;
+  const executeDeleteUser = async (userId: string) => {
     try {
       const res = await fetch(`/api/admin/users?id=${userId}`, { method: 'DELETE' });
       if (!res.ok) { const d = await res.json(); throw new Error(d.error); }
@@ -109,8 +108,20 @@ export default function AdminDashboardPage() {
     } catch (err: any) { showMsg(err.message, 'error'); }
   };
 
-  const resetUserLevel = async (u: UserData) => {
-    if (!confirm(`Reset "${u.displayName}" level from ${u.level} to ${u.registrationLevel}?`)) return;
+  const deleteUser = (userId: string, name: string) => {
+    toast((t) => (
+      <div className="flex flex-col gap-3 p-1">
+        <div className="flex items-center gap-2 font-bold"><AlertTriangle className="text-amber-500" size={20} /> Delete "{name}"?</div>
+        <p className="text-sm">This cannot be undone.</p>
+        <div className="flex justify-end gap-2 mt-2">
+          <Button variant="outline" size="sm" onClick={() => toast.dismiss(t.id)}>Cancel</Button>
+          <Button size="sm" className="bg-red-500 text-white hover:bg-red-600" onClick={() => { toast.dismiss(t.id); executeDeleteUser(userId); }}>Delete</Button>
+        </div>
+      </div>
+    ), { duration: 5000 });
+  };
+
+  const executeResetLevel = async (u: UserData) => {
     try {
       const res = await fetch('/api/admin/users', {
         method: 'PUT',
@@ -121,6 +132,19 @@ export default function AdminDashboardPage() {
       showMsg(`Level reset to ${u.registrationLevel}`, 'success');
       fetchAll();
     } catch (err: any) { showMsg(err.message, 'error'); }
+  };
+
+  const resetUserLevel = (u: UserData) => {
+    toast((t) => (
+      <div className="flex flex-col gap-3 p-1">
+        <div className="flex items-center gap-2 font-bold"><AlertTriangle className="text-amber-500" size={20} /> Reset level?</div>
+        <p className="text-sm">Reset "{u.displayName}" from {u.level} to {u.registrationLevel}?</p>
+        <div className="flex justify-end gap-2 mt-2">
+          <Button variant="outline" size="sm" onClick={() => toast.dismiss(t.id)}>Cancel</Button>
+          <Button size="sm" className="bg-amber-500 text-white hover:bg-amber-600" onClick={() => { toast.dismiss(t.id); executeResetLevel(u); }}>Reset</Button>
+        </div>
+      </div>
+    ), { duration: 5000 });
   };
 
   const createUser = async (e: React.FormEvent) => {
@@ -161,14 +185,26 @@ export default function AdminDashboardPage() {
     } catch (err: any) { showMsg(err.message, 'error'); }
   };
 
-  const deleteClassroom = async (id: string, name: string) => {
-    if (!confirm(`Delete "${name}"? Students will be unlinked.`)) return;
+  const executeDeleteClassroom = async (id: string) => {
     try {
       const res = await fetch(`/api/admin/classrooms?id=${id}`, { method: 'DELETE' });
       if (!res.ok) throw new Error('Failed');
       showMsg('Classroom deleted', 'success');
       setClassrooms(prev => prev.filter(c => c.id !== id));
     } catch (err: any) { showMsg(err.message, 'error'); }
+  };
+
+  const deleteClassroom = (id: string, name: string) => {
+    toast((t) => (
+      <div className="flex flex-col gap-3 p-1">
+        <div className="flex items-center gap-2 font-bold"><AlertTriangle className="text-amber-500" size={20} /> Delete classroom?</div>
+        <p className="text-sm">Delete "{name}"? Students will be unlinked.</p>
+        <div className="flex justify-end gap-2 mt-2">
+          <Button variant="outline" size="sm" onClick={() => toast.dismiss(t.id)}>Cancel</Button>
+          <Button size="sm" className="bg-red-500 text-white hover:bg-red-600" onClick={() => { toast.dismiss(t.id); executeDeleteClassroom(id); }}>Delete</Button>
+        </div>
+      </div>
+    ), { duration: 5000 });
   };
 
   const reassignTeacher = async () => {
@@ -201,76 +237,72 @@ export default function AdminDashboardPage() {
     return curIdx < regIdx;
   });
 
-  const tabs: { key: Tab; label: string; icon: string }[] = [
-    { key: 'overview', label: 'Overview', icon: '📊' },
-    { key: 'users', label: `Users (${users.length})`, icon: '👥' },
-    { key: 'classrooms', label: `Classrooms (${classrooms.length})`, icon: '🏫' },
+  const tabs: { key: Tab; label: string; icon: React.ReactNode }[] = [
+    { key: 'overview', label: 'Overview', icon: <BarChart2 size={18} /> },
+    { key: 'users', label: `Users (${users.length})`, icon: <Users size={18} /> },
+    { key: 'classrooms', label: `Classrooms (${classrooms.length})`, icon: <School size={18} /> },
   ];
 
   return (
-    <div className="max-w-6xl mx-auto space-y-6">
+    <div className="max-w-6xl mx-auto space-y-8 page-animate">
       {/* Header */}
-      <div>
-        <h1 className="text-2xl sm:text-3xl font-bold" style={{ color: 'var(--text-primary)' }}>⚙️ Admin Dashboard</h1>
-        <p style={{ color: 'var(--text-secondary)' }}>Full platform management — users, classrooms, and monitoring.</p>
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
+        <div className="flex items-center gap-4">
+          <div className="hidden sm:flex items-center justify-center w-14 h-14 rounded-2xl bg-[var(--accent-violet)]/10 text-[var(--accent-violet)] shadow-inner">
+            <Settings size={28} />
+          </div>
+          <div>
+            <h1 className="text-3xl sm:text-4xl font-extrabold tracking-tight" style={{ color: 'var(--text-primary)' }}>Admin Dashboard</h1>
+            <p className="mt-1.5 text-[16px] font-medium" style={{ color: 'var(--text-secondary)' }}>Full platform management — users, classrooms, and monitoring.</p>
+          </div>
+        </div>
       </div>
 
-      {/* Status message */}
-      {msg && (
-        <div className="p-3 rounded-xl text-sm" style={{
-          background: msgType === 'success' ? 'rgba(16,185,129,0.1)' : 'rgba(239,68,68,0.1)',
-          color: msgType === 'success' ? 'var(--accent-emerald-text)' : 'var(--accent-red)',
-          border: `1px solid ${msgType === 'success' ? 'rgba(16,185,129,0.2)' : 'rgba(239,68,68,0.2)'}`,
-        }}>
-          {msgType === 'success' ? '✅' : '⚠️'} {msg}
-        </div>
-      )}
-
       {/* Tabs */}
-      <div className="flex gap-2 overflow-x-auto pb-1">
+      <div className="flex gap-3 overflow-x-auto pb-2 custom-scrollbar">
         {tabs.map(t => (
           <button key={t.key} onClick={() => setTab(t.key)}
-            className="px-4 py-2.5 rounded-xl text-sm font-medium whitespace-nowrap transition-all duration-200"
+            className={`px-5 py-3 rounded-2xl text-[15px] font-bold whitespace-nowrap transition-all duration-200 ${tab === t.key ? 'shadow-md' : 'hover:bg-[var(--bg-card)]'}`}
             style={tab === t.key ? {
-              background: 'linear-gradient(to right, rgba(59,130,246,0.2), rgba(99,102,241,0.15))',
-              color: 'var(--accent-blue)', border: '1px solid rgba(59,130,246,0.3)',
+              background: 'linear-gradient(135deg, var(--accent-violet), var(--accent-indigo))',
+              color: '#fff', border: '1px solid transparent',
             } : { background: 'var(--bg-input)', color: 'var(--text-secondary)', border: '1px solid var(--border-subtle)' }}
           >
-            {t.icon} {t.label}
+            {t.icon} <span className="ml-1">{t.label}</span>
           </button>
         ))}
       </div>
 
       {/* ─── OVERVIEW TAB ───────────────────────────────────── */}
       {tab === 'overview' && (
-        <div className="space-y-6">
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+        <div className="space-y-8 animate-in fade-in slide-in-from-right-4">
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-6">
             {[
-              { icon: '👥', label: 'Total Users', value: users.length },
-              { icon: '🎓', label: 'Students', value: students.length },
-              { icon: '👩‍🏫', label: 'Teachers', value: teachers.length },
-              { icon: '🏫', label: 'Classrooms', value: classrooms.length },
+              { icon: <Users size={28} />, label: 'Total Users', value: users.length, color: 'var(--accent-blue)' },
+              { icon: <GraduationCap size={28} />, label: 'Students', value: students.length, color: 'var(--accent-emerald)' },
+              { icon: <UserCog size={28} />, label: 'Teachers', value: teachers.length, color: '#f59e0b' },
+              { icon: <School size={28} />, label: 'Classrooms', value: classrooms.length, color: 'var(--accent-indigo)' },
             ].map(s => (
-              <Card key={s.label} className="p-5">
-                <span className="text-2xl">{s.icon}</span>
-                <h3 className="font-medium text-xs mt-2" style={{ color: 'var(--text-secondary)' }}>{s.label}</h3>
-                <p className="text-2xl font-bold mt-1" style={{ color: 'var(--text-primary)' }}>{s.value}</p>
+              <Card key={s.label} className="p-6 sm:p-8 rounded-[2rem] border-[var(--border-subtle)] bg-[var(--bg-card)] hover:-translate-y-1 transition-all hover:shadow-lg">
+                <span className="text-3xl mb-4 inline-flex items-center justify-center w-14 h-14 rounded-[1rem] shadow-inner" style={{ background: `${s.color}20`, color: s.color }}>{s.icon}</span>
+                <h3 className="font-bold text-[13px] uppercase tracking-wider mt-2 mb-1" style={{ color: 'var(--text-secondary)' }}>{s.label}</h3>
+                <p className="text-3xl sm:text-4xl font-black tracking-tight" style={{ color: 'var(--text-primary)' }}>{s.value}</p>
               </Card>
             ))}
           </div>
 
           {/* Level mismatches */}
           {levelMismatch.length > 0 && (
-            <Card className="p-5" style={{ border: '1px solid rgba(245,158,11,0.3)' }}>
-              <h3 className="font-bold text-sm mb-3 flex items-center gap-2" style={{ color: '#f59e0b' }}>⚠️ Level Mismatches ({levelMismatch.length})</h3>
-              <p className="text-xs mb-3" style={{ color: 'var(--text-muted)' }}>These students have a level below their registration level.</p>
-              <div className="space-y-2">
+            <Card className="p-6 sm:p-8 rounded-[2rem]" style={{ border: '1px solid rgba(245,158,11,0.3)', background: 'rgba(245,158,11,0.05)' }}>
+              <h3 className="font-bold text-[16px] mb-4 flex items-center gap-2 uppercase tracking-wider" style={{ color: '#f59e0b' }}><AlertTriangle size={20} /> Level Mismatches ({levelMismatch.length})</h3>
+              <p className="text-[14px] font-medium mb-4" style={{ color: 'var(--text-muted)' }}>These students have a level below their registration level.</p>
+              <div className="space-y-3">
                 {levelMismatch.map(u => (
-                  <div key={u.id} className="flex items-center justify-between p-2.5 rounded-xl" style={{ background: 'var(--bg-input)' }}>
-                    <span className="text-sm" style={{ color: 'var(--text-primary)' }}>
-                      {u.displayName} — Current: <strong>{u.level}</strong>, Registered: <strong>{u.registrationLevel}</strong>
+                  <div key={u.id} className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-4 rounded-2xl shadow-sm" style={{ background: 'var(--bg-card)', border: '1px solid rgba(245,158,11,0.2)' }}>
+                    <span className="text-[15px] font-bold" style={{ color: 'var(--text-primary)' }}>
+                      {u.displayName} <span className="opacity-50 mx-2">|</span> Current: <span style={{ color: 'var(--accent-red)' }}>{u.level}</span> <span className="opacity-50 mx-2">|</span> Registered: <span style={{ color: 'var(--accent-emerald)' }}>{u.registrationLevel}</span>
                     </span>
-                    <Button size="sm" onClick={() => resetUserLevel(u)}>Reset</Button>
+                    <Button size="sm" onClick={() => resetUserLevel(u)} className="rounded-xl px-6 font-bold shadow-sm sm:w-auto w-full">Reset Level</Button>
                   </div>
                 ))}
               </div>
@@ -278,12 +310,12 @@ export default function AdminDashboardPage() {
           )}
 
           {/* Quick actions */}
-          <Card className="p-5">
-            <h3 className="font-bold text-sm mb-3" style={{ color: 'var(--text-primary)' }}>Quick Actions</h3>
-            <div className="flex flex-wrap gap-3">
-              <Button size="sm" onClick={() => setTab('users')}>Manage Users</Button>
-              <Button size="sm" onClick={() => setTab('classrooms')}>Manage Classrooms</Button>
-              <Button size="sm" variant="outline" onClick={() => { setTab('users'); setSearch('teacher'); }}>View Teachers</Button>
+          <Card className="p-6 sm:p-8 rounded-[2rem] border-[var(--border-subtle)] bg-[var(--bg-card)]">
+            <h3 className="font-bold text-xl mb-4 tracking-tight" style={{ color: 'var(--text-primary)' }}>Quick Actions</h3>
+            <div className="flex flex-wrap gap-4">
+              <Button onClick={() => setTab('users')} className="h-12 px-6 rounded-xl font-bold shadow-md">Manage Users</Button>
+              <Button onClick={() => setTab('classrooms')} className="h-12 px-6 rounded-xl font-bold shadow-md">Manage Classrooms</Button>
+              <Button variant="outline" onClick={() => { setTab('users'); setSearch('teacher'); }} className="h-12 px-6 rounded-xl font-bold bg-[var(--bg-input)] hover:bg-[var(--bg-primary)] border-transparent text-[var(--text-primary)]">View Teachers</Button>
             </div>
           </Card>
         </div>
@@ -291,124 +323,149 @@ export default function AdminDashboardPage() {
 
       {/* ─── USERS TAB ──────────────────────────────────────── */}
       {tab === 'users' && (
-        <div className="space-y-4">
-          <div className="flex flex-col sm:flex-row gap-3 justify-between">
-            <div className="w-full sm:w-72">
-              <Input id="admin-search" name="search" placeholder="Search users..." value={search} onChange={(e) => setSearch(e.target.value)} />
+        <div className="space-y-6 animate-in fade-in slide-in-from-right-4">
+          <div className="flex flex-col sm:flex-row gap-4 justify-between items-center">
+            <div className="w-full sm:w-80 relative">
+              <Input 
+                id="admin-search" 
+                name="search" 
+                placeholder="Search users..." 
+                value={search} 
+                onChange={(e) => setSearch(e.target.value)} 
+                className="h-12 rounded-2xl bg-[var(--bg-card)] border-[var(--border-subtle)] focus:border-[var(--accent-blue)] pl-12 text-[15px] font-medium shadow-sm" 
+              />
+              <span className="absolute left-4 top-1/2 -translate-y-1/2 opacity-50"><Search size={18} /></span>
             </div>
-            <Button size="sm" onClick={() => setShowCreateUser(!showCreateUser)}>
+            <Button onClick={() => setShowCreateUser(!showCreateUser)} className={`h-12 px-6 rounded-2xl font-bold transition-all sm:w-auto w-full ${showCreateUser ? 'bg-[var(--bg-input)] text-[var(--text-primary)] hover:bg-[var(--bg-card)] border border-[var(--border-subtle)]' : 'shadow-md'}`}>
               {showCreateUser ? 'Cancel' : '+ Create User'}
             </Button>
           </div>
 
           {/* Create user form */}
           {showCreateUser && (
-            <Card className="p-5">
-              <form onSubmit={createUser} className="space-y-4">
-                <h3 className="font-bold text-sm mb-2" style={{ color: 'var(--text-primary)' }}>Create New Account</h3>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <Card className="p-6 sm:p-8 rounded-[2.5rem] border-[var(--border-subtle)] bg-[var(--bg-card)] shadow-md">
+              <form onSubmit={createUser} className="space-y-6">
+                <h3 className="font-bold text-xl mb-4 tracking-tight flex items-center gap-2" style={{ color: 'var(--text-primary)' }}><Sparkles size={20} className="text-[var(--accent-blue)]" /> Create New Account</h3>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <Input label="Name" id="new-user-name" name="newUserName" placeholder="Full name" 
-                    value={newUserForm.name} onChange={e => setNewUserForm(p => ({...p, name: e.target.value}))} required />
+                    value={newUserForm.name} onChange={e => setNewUserForm(p => ({...p, name: e.target.value}))} required className="h-14 rounded-2xl bg-[var(--bg-input)] border-transparent" />
                   <Input label="Email" id="new-user-email" name="newUserEmail" type="email" placeholder="email@example.com" 
-                    value={newUserForm.email} onChange={e => setNewUserForm(p => ({...p, email: e.target.value}))} required />
+                    value={newUserForm.email} onChange={e => setNewUserForm(p => ({...p, email: e.target.value}))} required className="h-14 rounded-2xl bg-[var(--bg-input)] border-transparent" />
                   <Input label="Password" id="new-user-pass" name="newUserPass" type="password" placeholder="Min 6 characters" 
-                    value={newUserForm.password} onChange={e => setNewUserForm(p => ({...p, password: e.target.value}))} required />
-                  <div className="flex gap-3">
+                    value={newUserForm.password} onChange={e => setNewUserForm(p => ({...p, password: e.target.value}))} required className="h-14 rounded-2xl bg-[var(--bg-input)] border-transparent" />
+                  <div className="flex gap-4">
                     <div className="flex-1">
-                      <label className="block text-xs font-medium mb-1.5" style={{ color: 'var(--text-secondary)' }}>Role</label>
-                      <select value={newUserForm.role} onChange={e => setNewUserForm(p => ({...p, role: e.target.value}))}
-                        className="w-full px-3 py-2.5 rounded-xl text-sm" style={{ background: 'var(--bg-input)', color: 'var(--text-primary)', border: '1px solid var(--border-input)' }}>
-                        {ROLES.map(r => <option key={r} value={r}>{r}</option>)}
-                      </select>
+                      <label className="block text-[13px] font-bold uppercase tracking-wider mb-2" style={{ color: 'var(--text-secondary)' }}>Role</label>
+                      <div className="relative">
+                        <select value={newUserForm.role} onChange={e => setNewUserForm(p => ({...p, role: e.target.value}))}
+                          className="w-full h-14 px-4 rounded-2xl text-[15px] font-medium appearance-none" style={{ background: 'var(--bg-input)', color: 'var(--text-primary)', border: '1px solid transparent' }}>
+                          {ROLES.map(r => <option key={r} value={r}>{r}</option>)}
+                        </select>
+                        <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none opacity-50">▼</div>
+                      </div>
                     </div>
                     <div className="flex-1">
-                      <label className="block text-xs font-medium mb-1.5" style={{ color: 'var(--text-secondary)' }}>Level</label>
-                      <select value={newUserForm.level} onChange={e => setNewUserForm(p => ({...p, level: e.target.value}))}
-                        className="w-full px-3 py-2.5 rounded-xl text-sm" style={{ background: 'var(--bg-input)', color: 'var(--text-primary)', border: '1px solid var(--border-input)' }}>
-                        {LEVELS.map(l => <option key={l} value={l}>{l}</option>)}
-                      </select>
+                      <label className="block text-[13px] font-bold uppercase tracking-wider mb-2" style={{ color: 'var(--text-secondary)' }}>Level</label>
+                      <div className="relative">
+                        <select value={newUserForm.level} onChange={e => setNewUserForm(p => ({...p, level: e.target.value}))}
+                          className="w-full h-14 px-4 rounded-2xl text-[15px] font-medium appearance-none" style={{ background: 'var(--bg-input)', color: 'var(--text-primary)', border: '1px solid transparent' }}>
+                          {LEVELS.map(l => <option key={l} value={l}>{l}</option>)}
+                        </select>
+                        <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none opacity-50">▼</div>
+                      </div>
                     </div>
                   </div>
                 </div>
-                <Button type="submit" size="sm" disabled={!newUserForm.name || !newUserForm.email || newUserForm.password.length < 6}>
-                  Create Account
-                </Button>
+                <div className="pt-2">
+                  <Button type="submit" className="h-14 px-8 rounded-2xl font-bold shadow-md" disabled={!newUserForm.name || !newUserForm.email || newUserForm.password.length < 6}>
+                    Create Account
+                  </Button>
+                </div>
               </form>
             </Card>
           )}
 
           {/* Edit user modal */}
           {editingUser && (
-            <Card className="p-5 space-y-4" style={{ border: '1px solid rgba(59,130,246,0.3)' }}>
-              <div className="flex justify-between items-center">
-                <h3 className="font-bold text-sm" style={{ color: 'var(--text-primary)' }}>Editing: {editingUser.displayName}</h3>
-                <button onClick={() => setEditingUser(null)} className="text-sm" style={{ color: 'var(--text-muted)' }}>✕ Close</button>
+            <Card className="p-6 sm:p-8 rounded-[2.5rem] bg-[var(--bg-card)] shadow-lg" style={{ border: '2px solid var(--accent-blue)' }}>
+              <div className="flex justify-between items-center mb-6">
+                <h3 className="font-bold text-xl tracking-tight" style={{ color: 'var(--text-primary)' }}>Editing: <span style={{ color: 'var(--accent-blue)' }}>{editingUser.displayName}</span></h3>
+                <button onClick={() => setEditingUser(null)} className="text-[14px] font-bold px-4 py-2 rounded-xl bg-[var(--bg-input)] hover:bg-[var(--bg-primary)] transition-colors" style={{ color: 'var(--text-muted)' }}>✕ Close</button>
               </div>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <Input label="Display Name" id="edit-name" name="editName" value={editForm.displayName ?? editingUser.displayName}
-                  onChange={e => setEditForm(p => ({ ...p, displayName: e.target.value }))} />
+                  onChange={e => setEditForm(p => ({ ...p, displayName: e.target.value }))} className="h-14 rounded-2xl bg-[var(--bg-input)] border-transparent" />
                 <div>
-                  <label className="block text-xs font-medium mb-1.5" style={{ color: 'var(--text-secondary)' }}>Role</label>
-                  <select value={editForm.role ?? editingUser.role}
-                    onChange={e => setEditForm(p => ({ ...p, role: e.target.value }))}
-                    className="w-full px-3 py-2.5 rounded-xl text-sm"
-                    style={{ background: 'var(--bg-input)', color: 'var(--text-primary)', border: '1px solid var(--border-input)' }}>
-                    {ROLES.map(r => <option key={r} value={r}>{r}</option>)}
-                  </select>
+                  <label className="block text-[13px] font-bold uppercase tracking-wider mb-2" style={{ color: 'var(--text-secondary)' }}>Role</label>
+                  <div className="relative">
+                    <select value={editForm.role ?? editingUser.role}
+                      onChange={e => setEditForm(p => ({ ...p, role: e.target.value }))}
+                      className="w-full h-14 px-4 rounded-2xl text-[15px] font-medium appearance-none"
+                      style={{ background: 'var(--bg-input)', color: 'var(--text-primary)', border: '1px solid transparent' }}>
+                      {ROLES.map(r => <option key={r} value={r}>{r}</option>)}
+                    </select>
+                    <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none opacity-50">▼</div>
+                  </div>
                 </div>
                 <div>
-                  <label className="block text-xs font-medium mb-1.5" style={{ color: 'var(--text-secondary)' }}>Level</label>
-                  <select value={editForm.level ?? editingUser.level}
-                    onChange={e => setEditForm(p => ({ ...p, level: e.target.value }))}
-                    className="w-full px-3 py-2.5 rounded-xl text-sm"
-                    style={{ background: 'var(--bg-input)', color: 'var(--text-primary)', border: '1px solid var(--border-input)' }}>
-                    {LEVELS.map(l => <option key={l} value={l}>{l}</option>)}
-                  </select>
+                  <label className="block text-[13px] font-bold uppercase tracking-wider mb-2" style={{ color: 'var(--text-secondary)' }}>Level</label>
+                  <div className="relative">
+                    <select value={editForm.level ?? editingUser.level}
+                      onChange={e => setEditForm(p => ({ ...p, level: e.target.value }))}
+                      className="w-full h-14 px-4 rounded-2xl text-[15px] font-medium appearance-none"
+                      style={{ background: 'var(--bg-input)', color: 'var(--text-primary)', border: '1px solid transparent' }}>
+                      {LEVELS.map(l => <option key={l} value={l}>{l}</option>)}
+                    </select>
+                    <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none opacity-50">▼</div>
+                  </div>
                 </div>
                 <Input label="Total XP" id="edit-xp" name="editXP" type="number"
                   value={editForm.totalScore ?? editingUser.totalScore}
-                  onChange={e => setEditForm(p => ({ ...p, totalScore: parseInt(e.target.value) || 0 }))} />
+                  onChange={e => setEditForm(p => ({ ...p, totalScore: parseInt(e.target.value) || 0 }))} className="h-14 rounded-2xl bg-[var(--bg-input)] border-transparent" />
               </div>
-              <div className="flex gap-3">
-                <Button size="sm" onClick={saveUser}>Save Changes</Button>
-                <Button size="sm" variant="outline" onClick={() => setEditingUser(null)}>Cancel</Button>
+              <div className="flex gap-4 pt-6 mt-6 border-t border-[var(--border-subtle)]">
+                <Button onClick={saveUser} className="h-12 px-6 rounded-xl font-bold shadow-md">Save Changes</Button>
+                <Button variant="outline" onClick={() => setEditingUser(null)} className="h-12 px-6 rounded-xl font-bold bg-[var(--bg-input)] hover:bg-[var(--bg-primary)] border-transparent text-[var(--text-primary)]">Cancel</Button>
               </div>
             </Card>
           )}
 
           {/* User list */}
-          <div className="space-y-2">
+          <div className="space-y-3">
             {filteredUsers.map(u => (
-              <Card key={u.id} className="p-4">
-                <div className="flex items-center gap-3 flex-wrap">
-                  <div className="w-10 h-10 rounded-full flex items-center justify-center text-xl shrink-0 overflow-hidden"
-                    style={{ background: 'linear-gradient(to bottom right, rgba(59,130,246,0.15), rgba(99,102,241,0.1))' }}>
+              <Card key={u.id} className="p-4 sm:p-5 rounded-[1.5rem] border-[var(--border-subtle)] bg-[var(--bg-card)] transition-all hover:-translate-y-0.5 hover:shadow-lg">
+                <div className="flex items-center gap-4 flex-wrap">
+                  <div className="w-12 h-12 rounded-[1rem] flex items-center justify-center text-2xl shrink-0 overflow-hidden shadow-inner"
+                    style={{ background: 'var(--bg-input)' }}>
                     {(u.avatarUrl || '').startsWith('data:image/') ? (
                       <img src={u.avatarUrl} alt="" className="w-full h-full object-cover" />
                     ) : (
-                      <span className="text-lg">{u.avatarUrl || '👤'}</span>
+                      <span>{u.avatarUrl || '👤'}</span>
                     )}
                   </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="font-semibold text-sm truncate" style={{ color: 'var(--text-primary)' }}>{u.displayName}</p>
-                    <p className="text-xs truncate" style={{ color: 'var(--text-muted)' }}>{u.email}</p>
+                  <div className="flex-1 min-w-0 min-w-[150px]">
+                    <p className="font-bold text-[16px] truncate" style={{ color: 'var(--text-primary)' }}>{u.displayName}</p>
+                    <p className="text-[13px] font-medium truncate" style={{ color: 'var(--text-muted)' }}>{u.email}</p>
                   </div>
-                  <span className="text-xs px-2 py-1 rounded-lg capitalize shrink-0" style={{
-                    background: u.role === 'admin' ? 'rgba(236,72,153,0.15)' : u.role === 'teacher' ? 'rgba(245,158,11,0.15)' : 'rgba(59,130,246,0.15)',
-                    color: u.role === 'admin' ? '#ec4899' : u.role === 'teacher' ? '#f59e0b' : 'var(--accent-blue)',
-                  }}>{u.role}</span>
-                  <span className="text-xs px-2 py-1 rounded-lg shrink-0" style={{ background: 'rgba(16,185,129,0.1)', color: 'var(--accent-emerald-text)' }}>
-                    {u.level}
-                  </span>
-                  <span className="text-xs font-bold shrink-0" style={{ color: 'var(--accent-blue)' }}>{u.totalScore} XP</span>
-                  <div className="flex gap-1 shrink-0">
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <span className="text-[12px] font-bold px-3 py-1.5 rounded-xl uppercase tracking-wider shrink-0" style={{
+                      background: u.role === 'admin' ? 'rgba(236,72,153,0.1)' : u.role === 'teacher' ? 'rgba(245,158,11,0.1)' : 'rgba(59,130,246,0.1)',
+                      color: u.role === 'admin' ? '#ec4899' : u.role === 'teacher' ? '#f59e0b' : 'var(--accent-blue)',
+                      border: `1px solid ${u.role === 'admin' ? 'rgba(236,72,153,0.2)' : u.role === 'teacher' ? 'rgba(245,158,11,0.2)' : 'rgba(59,130,246,0.2)'}`
+                    }}>{u.role}</span>
+                    <span className="text-[12px] font-bold px-3 py-1.5 rounded-xl shrink-0" style={{ background: 'rgba(16,185,129,0.1)', color: 'var(--accent-emerald)', border: '1px solid rgba(16,185,129,0.2)' }}>
+                      {u.level}
+                    </span>
+                    <span className="text-[14px] font-black shrink-0 px-2" style={{ color: 'var(--accent-blue)' }}>{u.totalScore.toLocaleString()} XP</span>
+                  </div>
+                  <div className="flex gap-2 shrink-0 ml-auto w-full sm:w-auto justify-end mt-2 sm:mt-0 pt-2 sm:pt-0 border-t sm:border-0 border-[var(--border-subtle)]">
                     <button onClick={() => { setEditingUser(u); setEditForm({}); }}
-                      className="p-1.5 rounded-lg transition-colors hover:bg-blue-500/10" style={{ color: 'var(--accent-blue)' }} title="Edit">
-                      ✏️
+                      className="px-4 py-2 rounded-xl text-[14px] font-bold transition-colors hover:bg-[var(--accent-blue)] hover:text-white" style={{ background: 'rgba(59,130,246,0.1)', color: 'var(--accent-blue)' }}>
+                      Edit
                     </button>
                     <button onClick={() => deleteUser(u.id, u.displayName)}
-                      className="p-1.5 rounded-lg transition-colors hover:bg-red-500/10" style={{ color: 'var(--accent-red)' }} title="Delete">
-                      🗑️
+                      className="px-4 py-2 rounded-xl text-[14px] font-bold transition-colors hover:bg-[var(--accent-red)] hover:text-white" style={{ background: 'rgba(239,68,68,0.1)', color: 'var(--accent-red)' }}>
+                      Delete
                     </button>
                   </div>
                 </div>
@@ -420,94 +477,123 @@ export default function AdminDashboardPage() {
 
       {/* ─── CLASSROOMS TAB ─────────────────────────────────── */}
       {tab === 'classrooms' && (
-        <div className="space-y-4">
+        <div className="space-y-6 animate-in fade-in slide-in-from-right-4">
           <div className="flex justify-between items-center">
-            <h2 className="text-lg font-bold" style={{ color: 'var(--text-primary)' }}>All Classrooms</h2>
-            <Button size="sm" onClick={() => setShowCreateClass(!showCreateClass)}>
+            <h2 className="text-2xl font-bold tracking-tight" style={{ color: 'var(--text-primary)' }}>All Classrooms</h2>
+            <Button onClick={() => setShowCreateClass(!showCreateClass)} className={`h-12 px-6 rounded-2xl font-bold transition-all ${showCreateClass ? 'bg-[var(--bg-input)] text-[var(--text-primary)] hover:bg-[var(--bg-card)] border border-[var(--border-subtle)]' : 'shadow-md'}`}>
               {showCreateClass ? 'Cancel' : '+ Create Classroom'}
             </Button>
           </div>
 
           {/* Create classroom form */}
           {showCreateClass && (
-            <Card className="p-5">
-              <form onSubmit={createClassroom} className="space-y-3">
+            <Card className="p-6 sm:p-8 rounded-[2.5rem] border-[var(--border-subtle)] bg-[var(--bg-card)] shadow-md">
+              <form onSubmit={createClassroom} className="space-y-5 max-w-2xl">
+                <h3 className="font-bold text-xl mb-4 tracking-tight flex items-center gap-2" style={{ color: 'var(--text-primary)' }}><School size={24} className="text-[var(--accent-indigo)]" /> Create New Classroom</h3>
                 <Input label="Name" id="new-class-name" name="newClassName" placeholder="e.g. English B1 — Spring 2026"
-                  value={newClassName} onChange={e => setNewClassName(e.target.value)} required />
-                <Input label="Description" id="new-class-desc" name="newClassDesc" placeholder="Optional"
-                  value={newClassDesc} onChange={e => setNewClassDesc(e.target.value)} />
+                  value={newClassName} onChange={e => setNewClassName(e.target.value)} required className="h-14 rounded-2xl bg-[var(--bg-input)] border-transparent" />
+                <Input label="Description (Optional)" id="new-class-desc" name="newClassDesc" placeholder="Brief description..."
+                  value={newClassDesc} onChange={e => setNewClassDesc(e.target.value)} className="h-14 rounded-2xl bg-[var(--bg-input)] border-transparent" />
                 <div>
-                  <label className="block text-xs font-medium mb-1.5" style={{ color: 'var(--text-secondary)' }}>Assign Teacher</label>
-                  <select value={newClassTeacher} onChange={e => setNewClassTeacher(e.target.value)}
-                    className="w-full px-3 py-2.5 rounded-xl text-sm"
-                    style={{ background: 'var(--bg-input)', color: 'var(--text-primary)', border: '1px solid var(--border-input)' }}>
-                    <option value="">Select a teacher...</option>
-                    {teachers.map(t => <option key={t.id} value={t.id}>{t.displayName} ({t.email})</option>)}
-                  </select>
+                  <label className="block text-[13px] font-bold uppercase tracking-wider mb-2" style={{ color: 'var(--text-secondary)' }}>Assign Teacher</label>
+                  <div className="relative">
+                    <select value={newClassTeacher} onChange={e => setNewClassTeacher(e.target.value)}
+                      className="w-full h-14 px-4 rounded-2xl text-[15px] font-medium appearance-none"
+                      style={{ background: 'var(--bg-input)', color: 'var(--text-primary)', border: '1px solid transparent' }}>
+                      <option value="">Select a teacher...</option>
+                      {teachers.map(t => <option key={t.id} value={t.id}>{t.displayName} ({t.email})</option>)}
+                    </select>
+                    <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none opacity-50">▼</div>
+                  </div>
                 </div>
-                <Button type="submit" size="sm" disabled={!newClassName.trim()}>Create</Button>
+                <div className="pt-2">
+                  <Button type="submit" className="h-14 px-8 rounded-2xl font-bold shadow-md" disabled={!newClassName.trim()}>Create Classroom</Button>
+                </div>
               </form>
             </Card>
           )}
 
           {/* Reassign teacher modal */}
           {reassignClassId && (
-            <Card className="p-5" style={{ border: '1px solid rgba(59,130,246,0.3)' }}>
-              <h3 className="font-bold text-sm mb-3" style={{ color: 'var(--text-primary)' }}>
-                Reassign Teacher — {classrooms.find(c => c.id === reassignClassId)?.name}
+            <Card className="p-6 sm:p-8 rounded-[2.5rem] bg-[var(--bg-card)] shadow-lg" style={{ border: '2px solid var(--accent-indigo)' }}>
+              <h3 className="font-bold text-xl mb-6 tracking-tight flex items-center gap-3" style={{ color: 'var(--text-primary)' }}>
+                <RefreshCw size={24} className="text-[var(--accent-blue)]" /> Reassign Teacher
+                <span className="text-[16px] font-medium px-3 py-1 rounded-xl bg-[var(--bg-input)]" style={{ color: 'var(--text-secondary)' }}>{classrooms.find(c => c.id === reassignClassId)?.name}</span>
               </h3>
-              <div className="flex gap-3 items-end">
-                <div className="flex-1">
-                  <label className="block text-xs font-medium mb-1.5" style={{ color: 'var(--text-secondary)' }}>New Teacher</label>
-                  <select value={reassignTeacherId} onChange={e => setReassignTeacherId(e.target.value)}
-                    className="w-full px-3 py-2.5 rounded-xl text-sm"
-                    style={{ background: 'var(--bg-input)', color: 'var(--text-primary)', border: '1px solid var(--border-input)' }}>
-                    <option value="">Select a teacher...</option>
-                    {teachers.map(t => <option key={t.id} value={t.id}>{t.displayName} ({t.email})</option>)}
-                  </select>
+              <div className="flex flex-col sm:flex-row gap-4 items-end">
+                <div className="flex-1 w-full">
+                  <label className="block text-[13px] font-bold uppercase tracking-wider mb-2" style={{ color: 'var(--text-secondary)' }}>New Teacher</label>
+                  <div className="relative">
+                    <select value={reassignTeacherId} onChange={e => setReassignTeacherId(e.target.value)}
+                      className="w-full h-14 px-4 rounded-2xl text-[15px] font-medium appearance-none"
+                      style={{ background: 'var(--bg-input)', color: 'var(--text-primary)', border: '1px solid transparent' }}>
+                      <option value="">Select a teacher...</option>
+                      {teachers.map(t => <option key={t.id} value={t.id}>{t.displayName} ({t.email})</option>)}
+                    </select>
+                    <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none opacity-50">▼</div>
+                  </div>
                 </div>
-                <Button size="sm" onClick={reassignTeacher} disabled={!reassignTeacherId}>Assign</Button>
-                <Button size="sm" variant="outline" onClick={() => setReassignClassId(null)}>Cancel</Button>
+                <div className="flex gap-3 w-full sm:w-auto">
+                  <Button onClick={reassignTeacher} disabled={!reassignTeacherId} className="h-14 px-8 rounded-2xl font-bold shadow-md flex-1 sm:flex-none">Assign</Button>
+                  <Button variant="outline" onClick={() => setReassignClassId(null)} className="h-14 px-6 rounded-2xl font-bold bg-[var(--bg-input)] hover:bg-[var(--bg-primary)] border-transparent text-[var(--text-primary)]">Cancel</Button>
+                </div>
               </div>
             </Card>
           )}
 
           {/* Classroom list */}
           {classrooms.length === 0 ? (
-            <Card className="p-8 text-center">
-              <span className="text-5xl block mb-3">🏫</span>
-              <h3 className="text-xl font-bold mb-2" style={{ color: 'var(--text-primary)' }}>No Classrooms</h3>
-              <p style={{ color: 'var(--text-secondary)' }}>Create your first classroom above.</p>
+            <Card className="p-10 sm:p-16 text-center rounded-[2.5rem] border-[var(--border-subtle)] shadow-sm bg-[var(--bg-card)]">
+              <div className="space-y-6">
+                <div className="w-24 h-24 rounded-full bg-[var(--bg-input)] flex items-center justify-center mx-auto mb-6 text-[var(--text-muted)]">
+                  <School size={40} />
+                </div>
+                <h3 className="text-2xl font-bold tracking-tight" style={{ color: 'var(--text-primary)' }}>No Classrooms</h3>
+                <p style={{ color: 'var(--text-secondary)' }} className="max-w-md mx-auto text-[16px] font-medium">Create your first classroom above to start managing students.</p>
+              </div>
             </Card>
           ) : (
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               {classrooms.map(c => (
-                <Card key={c.id} className="p-5 relative overflow-hidden">
-                  <div className="absolute -top-10 -right-10 w-28 h-28 rounded-full blur-3xl opacity-20" style={{ background: 'rgba(59,130,246,0.15)' }} />
+                <Card key={c.id} className="p-6 sm:p-8 relative overflow-hidden rounded-[2rem] border-[var(--border-subtle)] bg-[var(--bg-card)] transition-all hover:-translate-y-1 hover:shadow-xl group">
+                  <div className="absolute -top-16 -right-16 w-48 h-48 rounded-full blur-[60px] opacity-20 pointer-events-none transition-opacity group-hover:opacity-40" style={{ background: 'var(--accent-indigo)' }} />
                   <div className="relative z-10">
-                    <div className="flex justify-between items-start mb-2">
-                      <h3 className="font-bold text-base" style={{ color: 'var(--text-primary)' }}>{c.name}</h3>
-                      <code className="text-xs px-2 py-1 rounded-lg font-mono font-bold tracking-widest" style={{
+                    <div className="flex justify-between items-start mb-4 gap-4">
+                      <h3 className="font-black text-xl tracking-tight leading-tight" style={{ color: 'var(--text-primary)' }}>{c.name}</h3>
+                      <code className="text-[14px] px-3 py-1.5 rounded-xl font-mono font-bold tracking-widest shrink-0" style={{
                         background: 'var(--bg-input)', color: 'var(--accent-blue)', border: '1px solid var(--border-subtle)',
                       }}>{c.joinCode}</code>
                     </div>
-                    {c.description && <p className="text-xs mb-2" style={{ color: 'var(--text-muted)' }}>{c.description}</p>}
-                    <p className="text-sm mb-1" style={{ color: 'var(--text-secondary)' }}>
-                      👩‍🏫 <strong>{c.teacherName}</strong> <span className="text-xs" style={{ color: 'var(--text-muted)' }}>({c.teacherEmail})</span>
-                    </p>
-                    <p className="text-sm mb-3" style={{ color: 'var(--text-secondary)' }}>
-                      👥 {c.studentCount}/{c.maxStudents} students
-                    </p>
-                    <div className="flex gap-2 flex-wrap">
+                    {c.description && <p className="text-[15px] font-medium mb-6 leading-relaxed" style={{ color: 'var(--text-secondary)' }}>{c.description}</p>}
+                    
+                    <div className="space-y-3 pt-4 border-t border-[var(--border-subtle)] mb-6">
+                      <div className="flex items-center justify-between p-3 rounded-xl bg-[var(--bg-input)]">
+                        <span className="text-[13px] font-bold uppercase tracking-wider flex items-center gap-2" style={{ color: 'var(--text-muted)' }}>
+                          <UserCog size={16} /> Teacher
+                        </span>
+                        <div className="text-right">
+                          <p className="text-[14px] font-bold" style={{ color: 'var(--text-primary)' }}>{c.teacherName}</p>
+                          <p className="text-[12px] font-medium" style={{ color: 'var(--text-muted)' }}>{c.teacherEmail}</p>
+                        </div>
+                      </div>
+                      <div className="flex items-center justify-between p-3 rounded-xl bg-[var(--bg-input)]">
+                        <span className="text-[13px] font-bold uppercase tracking-wider flex items-center gap-2" style={{ color: 'var(--text-muted)' }}>
+                          <Users size={16} /> Students
+                        </span>
+                        <span className="text-[14px] font-bold" style={{ color: 'var(--text-primary)' }}>{c.studentCount} <span className="opacity-50 font-medium">/ {c.maxStudents}</span></span>
+                      </div>
+                    </div>
+                    
+                    <div className="flex gap-3 flex-wrap pt-2">
                       <button onClick={() => { setReassignClassId(c.id); setReassignTeacherId(c.teacherId || ''); }}
-                        className="px-3 py-1.5 rounded-lg text-xs font-medium transition-all duration-200"
-                        style={{ background: 'rgba(59,130,246,0.1)', color: 'var(--accent-blue)', border: '1px solid rgba(59,130,246,0.2)' }}>
-                        🔄 Reassign Teacher
+                        className="px-4 py-2 rounded-xl text-[14px] font-bold transition-all duration-200 hover:bg-[var(--accent-blue)] hover:text-white flex-1 flex items-center justify-center gap-2"
+                        style={{ background: 'rgba(59,130,246,0.1)', color: 'var(--accent-blue)' }}>
+                        <RefreshCw size={16} /> Reassign
                       </button>
                       <button onClick={() => deleteClassroom(c.id, c.name)}
-                        className="px-3 py-1.5 rounded-lg text-xs font-medium transition-all duration-200 hover:bg-red-500/20"
-                        style={{ background: 'rgba(239,68,68,0.1)', color: 'var(--accent-red)', border: '1px solid rgba(239,68,68,0.2)' }}>
-                        🗑️ Delete
+                        className="px-4 py-2 rounded-xl text-[14px] font-bold transition-all duration-200 hover:bg-[var(--accent-red)] hover:text-white flex-1 flex items-center justify-center gap-2"
+                        style={{ background: 'rgba(239,68,68,0.1)', color: 'var(--accent-red)' }}>
+                        <Trash2 size={16} /> Delete
                       </button>
                     </div>
                   </div>
