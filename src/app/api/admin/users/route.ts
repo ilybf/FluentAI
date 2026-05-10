@@ -104,6 +104,16 @@ export async function PUT(req: NextRequest) {
       }
     }
 
+    // When admin changes the level, reset XP to 0 and sync registrationLevel
+    // so the student starts fresh in the new level
+    if (updateData.level) {
+      const currentUser = await User.findById(userId).select('level').lean() as any;
+      if (currentUser && currentUser.level !== updateData.level) {
+        updateData.totalScore = 0;
+        updateData.registrationLevel = updateData.level;
+      }
+    }
+
     const updated = await User.findByIdAndUpdate(userId, updateData, { new: true })
       .select('-passwordHash')
       .lean();
