@@ -116,7 +116,6 @@ export default function ProfilePage() {
       await updateSession({
         name: displayName,
         nativeLanguage,
-        avatarUrl,
       });
     } catch (err: any) {
       toast.error(err.message || 'Failed to update profile');
@@ -218,7 +217,7 @@ export default function ProfilePage() {
       setProfile(prev => prev ? { ...prev, avatarUrl: dataUrl } : prev);
       toast.success('Profile picture updated!');
 
-      await updateSession({ avatarUrl: dataUrl });
+      // avatarUrl not pushed to session — stored in DB, fetched on-demand
     } catch (err: any) {
       toast.error(err.message || 'Failed to upload image');
     } finally {
