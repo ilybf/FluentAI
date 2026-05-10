@@ -128,7 +128,10 @@ export default function AdminDashboardPage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ userId: u.id, level: u.registrationLevel, totalScore: 0 }),
       });
-      if (!res.ok) throw new Error('Failed');
+      if (!res.ok) {
+        const d = await res.json().catch(() => ({}));
+        throw new Error(d.error || 'Failed');
+      }
       showMsg(`Level reset to ${u.registrationLevel}`, 'success');
       fetchAll();
     } catch (err: any) { showMsg(err.message, 'error'); }
