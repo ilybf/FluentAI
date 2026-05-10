@@ -8,7 +8,7 @@ declare module "next-auth" {
     nativeLanguage: string;
     totalScore: number;
     role: string;
-    avatarUrl: string;
+    avatarUrl?: string; // Optional — not stored in JWT to keep cookie small
   }
 
   interface Session {
@@ -18,7 +18,7 @@ declare module "next-auth" {
       nativeLanguage: string;
       totalScore: number;
       role: string;
-      avatarUrl: string;
+      avatarUrl: string; // Always present (defaults to ""), fetched on-demand from API
     } & DefaultSession["user"];
   }
 }
@@ -30,6 +30,6 @@ declare module "next-auth/jwt" {
     nativeLanguage: string;
     totalScore: number;
     role: string;
-    avatarUrl: string;
+    // avatarUrl intentionally excluded — stored in DB, fetched via /api/user
   }
 }
